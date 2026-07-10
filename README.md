@@ -39,6 +39,14 @@ https://你的GitHub帳號.github.io/badminton-3x3/
 4. 名稱可改為「羽球排場」
 5. 之後從主畫面圖示開啟
 
+## 舊 iPad Air 診斷頁
+
+如果舊 iPad Air 無法顯示主畫面，先開啟：
+
+https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
+
+診斷頁會檢查 Safari / Web App 模式、Service Worker、Cache、icon、manifest、主版版本、JS 語法、viewport、Storage、觸控與語音支援。
+
 ## 球員名單備份與還原
 
 系統操作內有：
