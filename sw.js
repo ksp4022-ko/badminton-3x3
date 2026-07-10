@@ -1,4 +1,4 @@
-const CACHE_NAME = 'badminton-3x3-v2.2.0-cache-20260710';
+const CACHE_NAME = 'badminton-3x3-v2.2.1-cache-20260710';
 const ASSETS = [
   './',
   './index.html',

@@ -46,8 +46,10 @@
     .app-title{font-size:clamp(23px,2.4vw,34px);font-weight:950;letter-spacing:.02em;white-space:nowrap;}
     .version{font-size:clamp(15px,1.4vw,20px);font-weight:900;color:#0f766e;white-space:nowrap;}
     .status-line{font-size:clamp(14px,1.2vw,18px);font-weight:800;color:#475569;text-align:right;}
-    .selected-banner{display:none;align-items:center;justify-content:space-between;gap:10px;margin:0 10px 10px;padding:10px 12px;border:2px solid #facc15;background:#fef9c3;border-radius:16px;font-size:18px;font-weight:900;box-shadow:0 8px 18px rgba(250,204,21,.2)}
+    .selected-banner{display:none;position:fixed;left:12px;right:12px;top:max(8px,env(safe-area-inset-top,0px));align-items:center;justify-content:space-between;gap:10px;min-height:54px;padding:8px 12px;border:2px solid #facc15;background:rgba(254,249,195,.98);border-radius:16px;font-size:18px;font-weight:900;box-shadow:0 8px 18px rgba(250,204,21,.2);z-index:48;backdrop-filter:blur(8px)}
     .selected-banner.show{display:flex}
+    .selected-banner #selectedText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .selected-banner button{flex:0 0 auto;}
     .app-header,.section-title{display:none;}
     .board-section{margin:0 0 8px;}
     .section-title{display:none;}
@@ -94,6 +96,9 @@
     .mode-row button.active{background:#0f766e;color:#fff}
     .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     .toggle-row button.active{background:#0f766e;color:#fff}
+    .color-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:8px 0 10px;}
+    .color-swatch{min-height:42px;border-radius:12px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.2);padding:0;}
+    .color-swatch.active{box-shadow:0 0 0 4px #0f766e;border-color:#fff;}
     .toast{position:fixed;left:50%;bottom:calc(18px + var(--safe-bottom));transform:translateX(-50%) translateY(120px);opacity:0;background:#0f172a;color:#fff;border-radius:999px;padding:12px 18px;font-weight:900;font-size:17px;z-index:80;box-shadow:var(--shadow);max-width:calc(100vw - 24px);text-align:center;transition:.25s ease;}
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
     .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:70;display:none;align-items:center;justify-content:center;padding:18px;}
@@ -112,6 +117,9 @@
       .app-shell{padding:6px 8px calc(10px + var(--safe-bottom));}
       .app-header{padding:4px 6px 6px;}
       .zone-row{gap:6px;}
+      .selected-banner{left:8px;right:8px;min-height:48px;padding:6px 8px;font-size:15px;border-radius:13px;}
+      .selected-banner #selectedText{white-space:normal;line-height:1.2;}
+      .selected-banner button{min-height:36px;font-size:14px;padding:5px 8px;}
       .zone-card{padding:6px;border-radius:14px;}
       .zone-head{min-height:38px;padding:6px 8px;margin-bottom:5px;border-radius:12px;}
       .slot-grid{gap:5px;min-height:136px;}
@@ -226,6 +234,8 @@
             <h3>球員管理</h3>
             <label>新增球員</label>
             <input id="newPlayerInput" type="text" placeholder="輸入姓名" />
+            <label>貼紙底色</label>
+            <div class="color-grid" id="newPlayerColorGrid" aria-label="新增球員貼紙底色"></div>
             <button class="primary" id="addPlayerBtn" style="width:100%;margin-top:8px">新增球員</button>
             <label>修改選取球員姓名</label>
             <input id="renamePlayerInput" type="text" placeholder="先選取球員" />
@@ -284,7 +294,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.2.0';
+  const APP_VERSION = '2.2.1';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -298,6 +308,7 @@
   let restVisible = false;
   let adminVisible = false;
   let collapsedSections = new Set(['voiceSettingsBody','gamesManageBody','systemOpsBody']);
+  let selectedNewPlayerColor = COLORS[0];
   let floatingDrag = { active:false, moved:false, dx:0, dy:0 };
 
   const $ = (id) => document.getElementById(id);
@@ -510,6 +521,7 @@
     $('panelTitle').innerHTML = isAdmin ? `羽球排場 3x3 <span class="version-inline">| V ${APP_VERSION}</span>` : '管理員工具';
     renderRestList();
     renderAdminUi();
+    renderColorPicker();
     renderCollapsedSections();
   }
 
@@ -532,6 +544,15 @@
     $('voiceLangSelect').value = state.settings.voiceLang || 'zh-TW-first';
     const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
     $('renamePlayerInput').value = p ? p.name : '';
+  }
+
+  function renderColorPicker(){
+    const grid = $('newPlayerColorGrid');
+    if(!grid) return;
+    grid.innerHTML = COLORS.map(color => {
+      const active = color === selectedNewPlayerColor ? ' active' : '';
+      return `<button class="color-swatch${active}" type="button" data-color="${escapeHtml(color)}" style="background:${escapeHtml(color)}" aria-label="選擇顏色 ${escapeHtml(color)}"></button>`;
+    }).join('');
   }
 
   function renderCollapsedSections(){
@@ -713,7 +734,7 @@
   function addPlayer(name){
     name = String(name||'').trim();
     if(!name){ showToast('請輸入姓名'); return; }
-    const p = { id:uid('P'), name, games:0, color:COLORS[state.players.length % COLORS.length], zone:'rest', slot:null, isActive:true, sortOrder:Date.now(), createdAt:nowIso(), updatedAt:nowIso() };
+    const p = { id:uid('P'), name, games:0, color:selectedNewPlayerColor, zone:'rest', slot:null, isActive:true, sortOrder:Date.now(), createdAt:nowIso(), updatedAt:nowIso() };
     state.players.push(p);
     logAction('addPlayer','rest',[name],'新增球員');
     saveState();
@@ -805,10 +826,10 @@
     render();
   }
 
-  function randomFillCourts(){
+  async function randomFillCourts(){
     const empty = [];
-    COURTS.forEach(z => SLOTS.forEach(slot => { if(!occupant(z, slot)) empty.push({zone:z, slot}); }));
-    if(empty.length === 0){ showToast('目前場地已滿'); return; }
+    COURTS.concat(NEXTS).forEach(z => SLOTS.forEach(slot => { if(!occupant(z, slot)) empty.push({zone:z, slot}); }));
+    if(empty.length === 0){ await alertDialog('場地已滿', 'Court 與 Next 都已滿，所有位置不動。'); return; }
     const rest = restPlayers();
     if(rest.length === 0){ showToast('休息區目前沒有人'); return; }
     const shuffled = rest.slice().sort(() => Math.random() - 0.5);
@@ -822,10 +843,11 @@
       moved.push(p.name);
     }
     state.settings.lastCallPlayers = moved;
-    logAction('randomFillCourts','courts',moved,'隨機填滿場地');
+    logAction('randomFillCourts','courts-next',moved,'隨機填滿 Court 與 Next 空格');
     saveState();
     render();
-    if(count < empty.length) showToast('休息區人數不足，已填入可用球員');
+    if(count < shuffled.length) await alertDialog('場地已滿', '場地已滿，剩餘人員留在休息區。');
+    else if(count < empty.length) showToast('休息區人數不足，已填入可用球員');
     else showToast('已隨機填滿場地');
     if(state.settings.autoCallEnabled && moved.length) callPlayers(moved);
   }
@@ -1029,6 +1051,12 @@
     $('exportLogBtn').onclick = exportLogCsv;
     $('importBackupBtn').onclick = () => $('importFileInput').click();
     $('importFileInput').onchange = e => handleImportFile(e.target.files?.[0]);
+    $('newPlayerColorGrid').onclick = (e) => {
+      const swatch = e.target.closest('.color-swatch');
+      if(!swatch) return;
+      selectedNewPlayerColor = swatch.dataset.color || COLORS[0];
+      renderColorPicker();
+    };
     document.querySelectorAll('[data-collapse-target]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
