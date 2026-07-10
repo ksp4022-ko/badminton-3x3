@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="羽球排場" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>羽球排場 3x3</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <style>
+    :root{
+      --bg:#ecfeff;
+      --panel:#ffffff;
+      --ink:#0f172a;
+      --muted:#475569;
+      --line:#cbd5e1;
+      --brand:#0f766e;
+      --brand2:#14b8a6;
+      --danger:#dc2626;
+      --warn:#f59e0b;
+      --ok:#16a34a;
+      --chip:#fef3c7;
+      --shadow:0 12px 32px rgba(15,23,42,.18);
+      --radius:18px;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;margin:0;overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;}
+    body{min-height:100dvh;touch-action:manipulation;}
+    button,input,select{font:inherit}
+    button{cursor:pointer;border:0;border-radius:14px;min-height:48px;font-weight:800;background:#e2e8f0;color:#0f172a;padding:10px 14px;}
+    button:active{transform:translateY(1px)}
+    button.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    button.danger{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+    button.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+    button.ghost{background:#f8fafc;border:1px solid var(--line)}
+    button.small{min-height:40px;padding:8px 10px;font-size:16px;border-radius:12px}
+    input,select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;color:var(--ink);font-size:18px;}
+    label{font-weight:800;font-size:16px;color:#334155;display:block;margin:6px 0 4px}
+    .app-shell{min-height:100dvh;max-width:1366px;margin:0 auto;padding:10px 12px calc(18px + var(--safe-bottom));}
+    .app-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px 10px;position:sticky;top:0;background:linear-gradient(180deg,rgba(236,254,255,.98),rgba(236,254,255,.86));z-index:10;backdrop-filter:blur(8px)}
+    .title-wrap{display:flex;align-items:baseline;gap:10px;min-width:0;}
+    .app-title{font-size:clamp(23px,2.4vw,34px);font-weight:950;letter-spacing:.02em;white-space:nowrap;}
+    .version{font-size:clamp(15px,1.4vw,20px);font-weight:900;color:#0f766e;white-space:nowrap;}
+    .status-line{font-size:clamp(14px,1.2vw,18px);font-weight:800;color:#475569;text-align:right;}
+    .selected-banner{display:none;align-items:center;justify-content:space-between;gap:10px;margin:0 10px 10px;padding:10px 12px;border:2px solid #facc15;background:#fef9c3;border-radius:16px;font-size:18px;font-weight:900;box-shadow:0 8px 18px rgba(250,204,21,.2)}
+    .selected-banner.show{display:flex}
+    .board-section{margin:8px 0 12px;}
+    .section-title{font-size:18px;font-weight:950;color:#334155;margin:0 6px 8px;display:flex;align-items:center;justify-content:space-between;}
+    .zone-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+    .zone-card{background:rgba(255,255,255,.96);border:1px solid #bae6fd;border-radius:var(--radius);box-shadow:0 10px 22px rgba(15,23,42,.1);padding:10px;min-width:0;}
+    .zone-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+    .zone-title{font-size:clamp(18px,2vw,25px);font-weight:950;color:#0f172a;white-space:nowrap;}
+    .zone-count{font-size:15px;color:#64748b;font-weight:800;white-space:nowrap;}
+    .slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,1fr);gap:8px;min-height:clamp(118px,18dvh,188px);}
+    .slot{border:2px dashed #94a3b8;border-radius:16px;background:#f8fafc;min-height:54px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+    .slot.empty::after{content:"點此放入";color:#94a3b8;font-weight:900;font-size:clamp(14px,1.5vw,20px)}
+    .zone-action{margin-top:8px;display:grid;grid-template-columns:1fr;gap:8px;}
+    .player-chip{position:relative;width:100%;height:100%;min-height:54px;border-radius:15px;border:3px solid rgba(255,255,255,.95);box-shadow:0 4px 10px rgba(15,23,42,.18);display:flex;align-items:center;justify-content:center;padding:8px 8px 6px;overflow:hidden;color:#0f172a;user-select:none;}
+    .player-chip.selected{outline:4px solid #facc15;box-shadow:0 0 0 6px rgba(250,204,21,.35),0 8px 18px rgba(15,23,42,.22);}
+    .player-chip .games{position:absolute;top:4px;left:6px;z-index:1;background:rgba(255,255,255,.95);border:1px solid rgba(15,23,42,.18);border-radius:999px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,1.8vw,22px);font-weight:1000;line-height:1;padding:0 6px;}
+    .player-chip .name{position:relative;z-index:2;text-align:center;font-weight:1000;line-height:1.05;letter-spacing:.02em;font-size:clamp(20px,2.6vw,34px);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;}
+    .rest-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;}
+    .rest-list .player-chip{min-height:52px;}
+    .rest-list .player-chip .name{font-size:22px;}
+    .floating-button{position:fixed;left:12px;top:45dvh;width:64px;height:64px;border-radius:999px;background:linear-gradient(135deg,#0f766e,#06b6d4);color:#fff;font-size:28px;font-weight:1000;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:var(--shadow);touch-action:none;user-select:none;}
+    .floating-button.has-selected{background:linear-gradient(135deg,#f59e0b,#facc15);color:#422006;}
+    .float-panel{position:fixed;z-index:49;top:12px;right:12px;width:min(420px,calc(100vw - 24px));max-height:calc(100dvh - 24px);background:#ffffff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);display:none;overflow:hidden;}
+    .float-panel.open{display:flex;flex-direction:column;}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px;border-bottom:1px solid var(--line);background:#f8fafc;}
+    .panel-title{font-size:22px;font-weight:1000;}
+    .panel-body{padding:12px;overflow:auto;padding-bottom:calc(18px + var(--safe-bottom));}
+    .quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+    .panel-section{border:1px solid #e2e8f0;border-radius:18px;background:#fff;margin:10px 0;padding:12px;}
+    .panel-section h3{margin:0 0 10px;font-size:19px;font-weight:1000;color:#0f766e;}
+    .button-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+    .button-grid.single{grid-template-columns:1fr;}
+    .help{font-size:14px;line-height:1.35;color:#64748b;font-weight:700;margin:6px 0 0;}
+    .mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .mode-row button.active{background:#0f766e;color:#fff}
+    .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .toggle-row button.active{background:#0f766e;color:#fff}
+    .toast{position:fixed;left:50%;bottom:calc(18px + var(--safe-bottom));transform:translateX(-50%) translateY(120px);opacity:0;background:#0f172a;color:#fff;border-radius:999px;padding:12px 18px;font-weight:900;font-size:17px;z-index:80;box-shadow:var(--shadow);max-width:calc(100vw - 24px);text-align:center;transition:.25s ease;}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+    .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:70;display:none;align-items:center;justify-content:center;padding:18px;}
+    .modal-mask.show{display:flex;}
+    .modal-card{width:min(520px,100%);background:#fff;border-radius:22px;padding:18px;box-shadow:var(--shadow);}
+    .modal-card h3{margin:0 0 10px;font-size:24px;}
+    .modal-card p{margin:8px 0;color:#475569;font-weight:750;line-height:1.45;}
+    .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+    .portrait-warning{display:none;position:fixed;inset:0;z-index:100;background:linear-gradient(135deg,#0f766e,#0f172a);color:#fff;align-items:center;justify-content:center;padding:26px;text-align:center;}
+    .portrait-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);border-radius:26px;padding:28px;box-shadow:var(--shadow);}
+    .portrait-card .big{font-size:34px;font-weight:1000;margin-bottom:12px;}
+    .portrait-card .small{font-size:20px;font-weight:800;line-height:1.4;opacity:.95;}
+    .file-input{display:none}
+    .backup-summary{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:10px;margin-top:8px;font-weight:800;line-height:1.55;color:#334155;}
+    @media (max-width:900px) and (orientation:landscape){
+      .app-shell{padding:6px 8px calc(10px + var(--safe-bottom));}
+      .app-header{padding:4px 6px 6px;}
+      .zone-row{gap:6px;}
+      .zone-card{padding:7px;border-radius:14px;}
+      .slot-grid{gap:5px;min-height:112px;}
+      .slot{border-radius:12px;min-height:48px;}
+      .zone-title{font-size:18px}.zone-count{font-size:12px}
+      .player-chip{min-height:48px;border-radius:12px;border-width:2px;}
+      .player-chip .name{font-size:clamp(17px,3vw,25px)}
+      .player-chip .games{min-width:22px;height:22px;font-size:15px;top:3px;left:4px;}
+      .zone-action button{min-height:40px;font-size:16px;padding:6px}
+      .floating-button{width:56px;height:56px;font-size:24px;}
+      .float-panel{left:8px;right:8px;top:auto;bottom:calc(8px + var(--safe-bottom));width:auto;max-height:85dvh;border-radius:20px;}
+      .panel-body{padding-bottom:calc(16px + var(--safe-bottom));}
+    }
+    @media (max-width:700px) and (orientation:portrait){
+      .portrait-warning.phone{display:flex;}
+    }
+    @media (min-width:701px) and (orientation:portrait){
+      .app-shell{max-width:900px;}
+      .zone-row{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .app-header::after{content:"建議將 iPad 轉為橫向使用";display:block;position:absolute;left:14px;right:14px;top:100%;background:#fef3c7;border:1px solid #f59e0b;border-radius:14px;padding:8px;text-align:center;font-weight:900;color:#78350f;}
+      .board-section:first-of-type{margin-top:46px;}
+    }
+    @media (min-width:1367px){
+      .app-shell{max-width:1500px}.slot-grid{min-height:196px}.float-panel{width:460px}
+    }
+  </style>
+</head>
+<body>
+  <div class="portrait-warning phone">
+    <div class="portrait-card">
+      <div class="big">請將手機轉為橫向使用</div>
+      <div class="small">橫向後會顯示完整 3x3 排場畫面</div>
+    </div>
+  </div>
+
+  <main class="app-shell" id="appShell">
+    <header class="app-header">
+      <div class="title-wrap">
+        <div class="app-title">羽球排場 3x3</div>
+        <div class="version">V 2.1.0</div>
+      </div>
+      <div class="status-line" id="topStatus">單機 PWA｜本機儲存</div>
+    </header>
+
+    <div class="selected-banner" id="selectedBanner">
+      <div id="selectedText">已選取</div>
+      <button class="small warn" id="cancelSelectBtn">取消選取</button>
+    </div>
+
+    <section class="board-section">
+      <div class="section-title"><span>球場</span><span id="courtSummary"></span></div>
+      <div class="zone-row" id="courtRow"></div>
+    </section>
+
+    <section class="board-section">
+      <div class="section-title"><span>Next 等待區</span><span id="nextSummary"></span></div>
+      <div class="zone-row" id="nextRow"></div>
+    </section>
+  </main>
+
+  <button class="floating-button" id="floatButton" aria-label="管理員工具">•••</button>
+
+  <aside class="float-panel" id="floatPanel" aria-label="浮點管理員面板">
+    <div class="panel-head">
+      <div class="panel-title">管理員工具</div>
+      <button class="small ghost" id="closePanelBtn">×</button>
+    </div>
+    <div class="panel-body" id="panelBody">
+      <div class="quick-grid">
+        <button class="primary" id="repeatCallBtn">再叫一次</button>
+        <button class="warn" id="moveRestBtn">回到休息區</button>
+        <button class="ghost" id="toggleRestBtn">休息區</button>
+        <button class="ghost" id="toggleAdminBtn">Admin</button>
+      </div>
+
+      <div id="panelHint" class="backup-summary">未選取球員。可從場地或休息區點選人名。</div>
+
+      <section class="panel-section" id="restSection" style="display:none">
+        <h3>休息區</h3>
+        <div class="help">點選球員後，面板會自動縮小，接著點 Court / Next 空格放入。</div>
+        <div class="rest-list" id="restList"></div>
+      </section>
+
+      <section class="panel-section" id="adminSection" style="display:none">
+        <h3>Admin</h3>
+        <div id="adminLoginBox">
+          <label>管理員密碼</label>
+          <input id="adminPasswordInput" type="password" inputmode="numeric" placeholder="預設 1111" />
+          <button class="primary" id="adminLoginBtn" style="width:100%;margin-top:8px">登入</button>
+        </div>
+        <div id="adminTools" style="display:none">
+          <div class="backup-summary">管理員模式已開啟</div>
+
+          <div class="panel-section">
+            <h3>排場模式</h3>
+            <div class="mode-row">
+              <button id="freeModeBtn">自由暢打</button>
+              <button id="autoModeBtn">自動排場</button>
+            </div>
+            <button class="primary" id="randomFillBtn" style="width:100%;margin-top:8px">隨機填滿場地</button>
+          </div>
+
+          <div class="panel-section">
+            <h3>自動呼叫</h3>
+            <div class="toggle-row">
+              <button id="autoCallOffBtn">關閉</button>
+              <button id="autoCallOnBtn">開啟</button>
+            </div>
+            <label>語速</label>
+            <select id="voiceRateSelect"><option value="slow">慢</option><option value="normal">正常</option><option value="fast">快</option></select>
+            <label>音調</label>
+            <select id="voicePitchSelect"><option value="low">低</option><option value="normal">正常</option><option value="high">高</option></select>
+            <label>語音</label>
+            <select id="voiceLangSelect"><option value="auto">自動</option><option value="zh-TW-first">中文優先</option></select>
+            <div class="button-grid" style="margin-top:8px">
+              <button id="voiceTestBtn">語音設定 / 試播</button>
+              <button id="saveVoiceBtn">儲存設定</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3>球員管理</h3>
+            <label>新增球員</label>
+            <input id="newPlayerInput" type="text" placeholder="輸入姓名" />
+            <button class="primary" id="addPlayerBtn" style="width:100%;margin-top:8px">新增球員</button>
+            <label>修改選取球員姓名</label>
+            <input id="renamePlayerInput" type="text" placeholder="先選取球員" />
+            <div class="button-grid" style="margin-top:8px">
+              <button id="renamePlayerBtn">修改姓名</button>
+              <button class="danger" id="deletePlayerBtn">刪除球員</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3>場次管理</h3>
+            <div class="button-grid">
+              <button id="plusGameBtn">選取 +1</button>
+              <button id="minusGameBtn">選取 -1</button>
+              <button id="zeroPlayerBtn">選取歸零</button>
+              <button class="warn" id="resetAllGamesBtn">全部場次歸零</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <h3>系統操作</h3>
+            <div class="button-grid single">
+              <button id="exportBackupBtn">匯出備份 JSON</button>
+              <button id="importBackupBtn">匯入備份 JSON</button>
+              <button class="warn" id="resetTodayBtn">今日重新開始</button>
+              <button id="exportLogBtn">匯出今日紀錄 CSV</button>
+              <button class="danger" id="clearAllBtn">清空全部資料</button>
+            </div>
+            <input class="file-input" id="importFileInput" type="file" accept=".json,application/json" />
+            <div class="help">匯入會覆蓋目前資料，建議先匯出目前備份。</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-mask" id="modalMask">
+    <div class="modal-card">
+      <h3 id="modalTitle">確認</h3>
+      <p id="modalMessage">確定？</p>
+      <div id="modalExtra"></div>
+      <div class="modal-actions">
+        <button class="ghost" id="modalCancelBtn">取消</button>
+        <button class="primary" id="modalOkBtn">確認</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  const APP_VERSION = '2.1.0';
+  const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
+  const COURTS = ['court1','court2','court3'];
+  const NEXTS = ['next1','next2','next3'];
+  const SLOTS = [1,2,3,4];
+  const COLORS = ['#bfdbfe','#bbf7d0','#fde68a','#fecaca','#ddd6fe','#fed7aa','#bae6fd','#fbcfe8','#ccfbf1','#e9d5ff','#d9f99d','#fef3c7'];
+
+  let state = loadState();
+  let selectedPlayer = null;
+  let isAdmin = false;
+  let panelOpen = false;
+  let restVisible = false;
+  let adminVisible = false;
+  let floatingDrag = { active:false, moved:false, dx:0, dy:0 };
+
+  const $ = (id) => document.getElementById(id);
+
+  function nowIso(){ return new Date().toISOString(); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function localStamp(){
+    const d = new Date();
+    return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes());
+  }
+  function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,7).toUpperCase(); }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+  function escapeHtml(str){
+    return String(str ?? '').replace(/[&<>'"]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+  }
+
+  function defaultState(){
+    return {
+      app:'badminton-court-3x3',
+      version:APP_VERSION,
+      createdAt:nowIso(),
+      updatedAt:nowIso(),
+      players:[],
+      settings:{
+        courtCount:3,
+        nextCount:3,
+        playersPerCourt:4,
+        adminPassword:'1111',
+        freePlayMode:true,
+        autoArrangeMode:false,
+        autoCallEnabled:false,
+        voiceRate:'normal',
+        voicePitch:'normal',
+        voiceLang:'zh-TW-first',
+        lastCallPlayers:[],
+        floating:{ side:'left', y:0.45 }
+      },
+      gameLog:[]
+    };
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultState();
+      const data = JSON.parse(raw);
+      return normalizeState(data);
+    }catch(err){
+      console.error(err);
+      return defaultState();
+    }
+  }
+
+  function normalizeState(data){
+    const base = defaultState();
+    const merged = Object.assign(base, data || {});
+    merged.settings = Object.assign(base.settings, data?.settings || {});
+    merged.players = Array.isArray(data?.players) ? data.players : [];
+    merged.gameLog = Array.isArray(data?.gameLog) ? data.gameLog : [];
+    merged.players.forEach((p, i) => {
+      p.id = p.id || uid('P');
+      p.name = p.name || '未命名';
+      p.games = Number.isFinite(Number(p.games)) ? Math.max(0, Number(p.games)) : 0;
+      p.color = p.color || COLORS[i % COLORS.length];
+      p.zone = validZone(p.zone) ? p.zone : 'rest';
+      p.slot = p.zone === 'rest' ? null : Number(p.slot) || null;
+      p.sortOrder = Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : i + 1;
+      p.isActive = p.isActive !== false;
+      p.createdAt = p.createdAt || nowIso();
+      p.updatedAt = p.updatedAt || nowIso();
+    });
+    merged.version = APP_VERSION;
+    merged.updatedAt = nowIso();
+    return merged;
+  }
+
+  function saveState(){
+    state.updatedAt = nowIso();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function validZone(zone){ return zone === 'rest' || COURTS.includes(zone) || NEXTS.includes(zone); }
+  function getPlayer(id){ return state.players.find(p => p.id === id && p.isActive !== false) || null; }
+  function activePlayers(){ return state.players.filter(p => p.isActive !== false); }
+  function zonePlayers(zone){ return activePlayers().filter(p => p.zone === zone).sort((a,b) => (a.slot || 99) - (b.slot || 99)); }
+  function restPlayers(){ return activePlayers().filter(p => p.zone === 'rest').sort((a,b) => (a.games - b.games) || (a.sortOrder - b.sortOrder)); }
+  function occupant(zone, slot){ return activePlayers().find(p => p.zone === zone && Number(p.slot) === Number(slot)) || null; }
+  function zoneLabel(zone){
+    if(zone === 'rest') return '休息區';
+    if(zone.startsWith('court')) return 'Court ' + zone.replace('court','');
+    if(zone.startsWith('next')) return 'Next ' + zone.replace('next','');
+    return zone;
+  }
+
+  function logAction(action, zone, players, note){
+    state.gameLog.push({ logId:uid('L'), time:nowIso(), action, zone, players:Array.isArray(players)?players:[], note:note || '' });
+    if(state.gameLog.length > 1000) state.gameLog = state.gameLog.slice(-1000);
+  }
+
+  function showToast(msg){
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  function confirmDialog(title, message, extraHtml=''){
+    return new Promise((resolve) => {
+      $('modalTitle').textContent = title;
+      $('modalMessage').textContent = message;
+      $('modalExtra').innerHTML = extraHtml;
+      $('modalMask').classList.add('show');
+      const cleanup = (answer) => {
+        $('modalMask').classList.remove('show');
+        $('modalOkBtn').onclick = null;
+        $('modalCancelBtn').onclick = null;
+        resolve(answer);
+      };
+      $('modalOkBtn').onclick = () => cleanup(true);
+      $('modalCancelBtn').onclick = () => cleanup(false);
+    });
+  }
+
+  function playerChipHtml(p){
+    const selected = selectedPlayer?.playerId === p.id ? ' selected' : '';
+    return `<div class="player-chip${selected}" data-player-id="${escapeHtml(p.id)}" style="background:${escapeHtml(p.color)}"><div class="games">${Number(p.games)||0}</div><div class="name">${escapeHtml(p.name)}</div></div>`;
+  }
+
+  function render(){
+    console.time?.('render');
+    renderHeader();
+    renderZones();
+    renderSelectedBanner();
+    renderPanel();
+    saveState();
+    console.timeEnd?.('render');
+  }
+
+  function renderHeader(){
+    const count = activePlayers().length;
+    const onCourt = COURTS.reduce((sum,z)=>sum+zonePlayers(z).length,0);
+    const next = NEXTS.reduce((sum,z)=>sum+zonePlayers(z).length,0);
+    $('topStatus').textContent = `球員 ${count}｜場上 ${onCourt}｜Next ${next}`;
+    $('courtSummary').textContent = `場上 ${onCourt}/12`;
+    $('nextSummary').textContent = `等待 ${next}/12`;
+  }
+
+  function renderZones(){
+    $('courtRow').innerHTML = COURTS.map(z => renderZoneCard(z, true)).join('');
+    $('nextRow').innerHTML = NEXTS.map(z => renderZoneCard(z, false)).join('');
+  }
+
+  function renderZoneCard(zone, isCourt){
+    const players = zonePlayers(zone);
+    const title = zoneLabel(zone);
+    const slots = SLOTS.map(slot => {
+      const p = occupant(zone, slot);
+      const content = p ? playerChipHtml(p) : '';
+      return `<div class="slot ${p?'filled':'empty'}" data-zone="${zone}" data-slot="${slot}">${content}</div>`;
+    }).join('');
+    const action = isCourt
+      ? `<button class="warn court-down-btn" data-court="${zone}">下場</button>`
+      : `<button class="primary next-up-btn" data-next="${zone}">上場</button>`;
+    return `<div class="zone-card"><div class="zone-head"><div class="zone-title">${title}</div><div class="zone-count">${players.length}/4</div></div><div class="slot-grid">${slots}</div><div class="zone-action">${action}</div></div>`;
+  }
+
+  function renderSelectedBanner(){
+    const banner = $('selectedBanner');
+    const btn = $('floatButton');
+    if(selectedPlayer){
+      const p = getPlayer(selectedPlayer.playerId);
+      if(!p){ selectedPlayer = null; renderSelectedBanner(); return; }
+      banner.classList.add('show');
+      $('selectedText').textContent = `已選取：${p.name}｜目前位置：${zoneLabel(p.zone)}${p.slot ? ' 第 '+p.slot+' 格' : ''}｜請點選場地空格放入`;
+      btn.classList.add('has-selected');
+    }else{
+      banner.classList.remove('show');
+      btn.classList.remove('has-selected');
+    }
+  }
+
+  function renderPanel(){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    const hint = $('panelHint');
+    if(p){
+      hint.textContent = p.zone === 'rest'
+        ? `已選取：${p.name}。請點選 Court / Next 空格放入。`
+        : `已選取：${p.name}。可按「回到休息區」或點其他格交換。`;
+      $('moveRestBtn').style.display = p.zone === 'rest' ? 'none' : '';
+    }else{
+      hint.textContent = '未選取球員。可從場地或休息區點選人名。';
+      $('moveRestBtn').style.display = 'none';
+    }
+    $('restSection').style.display = restVisible ? '' : 'none';
+    $('adminSection').style.display = adminVisible ? '' : 'none';
+    renderRestList();
+    renderAdminUi();
+  }
+
+  function renderRestList(){
+    const players = restPlayers();
+    $('restList').innerHTML = players.length
+      ? players.map(playerChipHtml).join('')
+      : '<div class="help">休息區目前沒有人</div>';
+  }
+
+  function renderAdminUi(){
+    $('adminLoginBox').style.display = isAdmin ? 'none' : '';
+    $('adminTools').style.display = isAdmin ? '' : 'none';
+    $('freeModeBtn').classList.toggle('active', !!state.settings.freePlayMode);
+    $('autoModeBtn').classList.toggle('active', !!state.settings.autoArrangeMode);
+    $('autoCallOffBtn').classList.toggle('active', !state.settings.autoCallEnabled);
+    $('autoCallOnBtn').classList.toggle('active', !!state.settings.autoCallEnabled);
+    $('voiceRateSelect').value = state.settings.voiceRate || 'normal';
+    $('voicePitchSelect').value = state.settings.voicePitch || 'normal';
+    $('voiceLangSelect').value = state.settings.voiceLang || 'zh-TW-first';
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    $('renamePlayerInput').value = p ? p.name : '';
+  }
+
+  function selectPlayer(playerId, options={}){
+    const p = getPlayer(playerId);
+    if(!p) return;
+    selectedPlayer = { playerId:p.id, name:p.name, fromZone:p.zone, fromSlot:p.slot ?? null };
+    showToast(`已選取：${p.name}`);
+    if(options.closePanelAfterSelect){ closePanel(); }
+    render();
+  }
+
+  function clearSelected(reason){
+    selectedPlayer = null;
+    if(reason) showToast(reason);
+    render();
+  }
+
+  function movePlayer(playerId, targetZone, targetSlot){
+    const p = getPlayer(playerId);
+    if(!p || !validZone(targetZone)) return false;
+    const oldZone = p.zone;
+    const oldSlot = p.slot;
+
+    if(targetZone === 'rest'){
+      p.zone = 'rest';
+      p.slot = null;
+      p.updatedAt = nowIso();
+      logAction('moveToRest','rest',[p.name],`${zoneLabel(oldZone)} → 休息區`);
+      saveState();
+      return true;
+    }
+
+    targetSlot = Number(targetSlot);
+    if(!SLOTS.includes(targetSlot)) return false;
+    const target = occupant(targetZone, targetSlot);
+    if(target && target.id !== p.id){
+      target.zone = oldZone;
+      target.slot = oldZone === 'rest' ? null : oldSlot;
+      target.updatedAt = nowIso();
+    }
+    p.zone = targetZone;
+    p.slot = targetSlot;
+    p.updatedAt = nowIso();
+    logAction('movePlayer',targetZone,[p.name],`${zoneLabel(oldZone)} → ${zoneLabel(targetZone)} #${targetSlot}`);
+    saveState();
+    return true;
+  }
+
+  async function courtDown(courtZone){
+    const players = zonePlayers(courtZone);
+    if(players.length === 0){ showToast('這個球場目前沒有人'); return; }
+    const ok = await confirmDialog('確認下場', `${zoneLabel(courtZone)} 下場？此球場人員場次會 +1 並回到休息區。`, `<div class="backup-summary">${players.map(p=>escapeHtml(p.name)).join('、')}</div>`);
+    if(!ok) return;
+    players.forEach(p => { p.games = (Number(p.games)||0)+1; p.zone='rest'; p.slot=null; p.updatedAt=nowIso(); });
+    logAction('courtDown',courtZone,players.map(p=>p.name),'下場並場次 +1');
+    if(selectedPlayer && players.some(p => p.id === selectedPlayer.playerId)) selectedPlayer = null;
+    saveState();
+    showToast(`${zoneLabel(courtZone)} 已下場`);
+    render();
+  }
+
+  function firstEmptyCourt(){
+    return COURTS.find(z => zonePlayers(z).length === 0) || null;
+  }
+
+  function nextUp(nextZone){
+    const players = zonePlayers(nextZone);
+    if(players.length === 0){ showToast('這組 Next 沒有人'); return; }
+    const court = firstEmptyCourt();
+    if(!court){ showToast('目前沒有空球場'); return; }
+    const sorted = players.sort((a,b)=>(a.slot||99)-(b.slot||99));
+    sorted.forEach((p,i) => { p.zone = court; p.slot = i+1; p.updatedAt = nowIso(); });
+    const names = sorted.map(p=>p.name);
+    state.settings.lastCallPlayers = names;
+    logAction('nextUp',court,names,`${zoneLabel(nextZone)} 上場到 ${zoneLabel(court)}`);
+    saveState();
+    showToast(`${zoneLabel(nextZone)} 已上場`);
+    render();
+    if(state.settings.autoCallEnabled) callPlayers(names);
+  }
+
+  function addPlayer(name){
+    name = String(name||'').trim();
+    if(!name){ showToast('請輸入姓名'); return; }
+    const p = { id:uid('P'), name, games:0, color:COLORS[state.players.length % COLORS.length], zone:'rest', slot:null, isActive:true, sortOrder:Date.now(), createdAt:nowIso(), updatedAt:nowIso() };
+    state.players.push(p);
+    logAction('addPlayer','rest',[name],'新增球員');
+    saveState();
+    $('newPlayerInput').value = '';
+    showToast(`已新增：${name}`);
+    render();
+  }
+
+  function renameSelected(){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(!p){ showToast('請先選取球員'); return; }
+    const name = $('renamePlayerInput').value.trim();
+    if(!name){ showToast('請輸入新姓名'); return; }
+    const old = p.name;
+    p.name = name;
+    p.updatedAt = nowIso();
+    selectedPlayer.name = name;
+    logAction('renamePlayer',p.zone,[name],`${old} → ${name}`);
+    saveState();
+    showToast('已修改姓名');
+    render();
+  }
+
+  async function deleteSelected(){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(!p){ showToast('請先選取球員'); return; }
+    const ok = await confirmDialog('刪除球員', `確定刪除 ${p.name}？`, '');
+    if(!ok) return;
+    p.isActive = false;
+    p.updatedAt = nowIso();
+    logAction('deletePlayer',p.zone,[p.name],'刪除球員');
+    selectedPlayer = null;
+    saveState();
+    showToast('已刪除');
+    render();
+  }
+
+  function adjustSelectedGames(delta){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(!p){ showToast('請先選取球員'); return; }
+    p.games = Math.max(0, (Number(p.games)||0) + delta);
+    p.updatedAt = nowIso();
+    logAction('adjustGames',p.zone,[p.name],`場次 ${delta>0?'+':''}${delta}`);
+    saveState();
+    render();
+  }
+
+  function zeroSelectedGames(){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(!p){ showToast('請先選取球員'); return; }
+    p.games = 0;
+    p.updatedAt = nowIso();
+    logAction('zeroPlayerGames',p.zone,[p.name],'單一球員場次歸零');
+    saveState();
+    render();
+  }
+
+  async function resetAllGames(){
+    const ok = await confirmDialog('全部場次歸零','確定將所有球員已打場次歸零？','');
+    if(!ok) return;
+    activePlayers().forEach(p => { p.games = 0; p.updatedAt = nowIso(); });
+    logAction('resetAllGames','all',[], '全部場次歸零');
+    saveState();
+    showToast('全部場次已歸零');
+    render();
+  }
+
+  async function resetToday(){
+    const ok = await confirmDialog('今日重新開始','所有人會回到休息區，場次歸零，Court / Next 清空。是否繼續？','');
+    if(!ok) return;
+    activePlayers().forEach(p => { p.zone='rest'; p.slot=null; p.games=0; p.updatedAt=nowIso(); });
+    selectedPlayer = null;
+    state.settings.lastCallPlayers = [];
+    logAction('resetToday','all',[], '今日重新開始');
+    saveState();
+    showToast('已重新開始');
+    render();
+  }
+
+  async function clearAll(){
+    const ok = await confirmDialog('清空全部資料','這會刪除所有球員與紀錄。建議先匯出備份 JSON。是否繼續？','');
+    if(!ok) return;
+    const ok2 = await confirmDialog('再次確認','真的要清空全部資料？此動作無法復原。','');
+    if(!ok2) return;
+    state = defaultState();
+    selectedPlayer = null;
+    saveState();
+    showToast('已清空全部資料');
+    render();
+  }
+
+  function randomFillCourts(){
+    const empty = [];
+    COURTS.forEach(z => SLOTS.forEach(slot => { if(!occupant(z, slot)) empty.push({zone:z, slot}); }));
+    if(empty.length === 0){ showToast('目前場地已滿'); return; }
+    const rest = restPlayers();
+    if(rest.length === 0){ showToast('休息區目前沒有人'); return; }
+    const shuffled = rest.slice().sort(() => Math.random() - 0.5);
+    const count = Math.min(empty.length, shuffled.length);
+    const moved = [];
+    for(let i=0;i<count;i++){
+      const p = shuffled[i];
+      p.zone = empty[i].zone;
+      p.slot = empty[i].slot;
+      p.updatedAt = nowIso();
+      moved.push(p.name);
+    }
+    state.settings.lastCallPlayers = moved;
+    logAction('randomFillCourts','courts',moved,'隨機填滿場地');
+    saveState();
+    render();
+    if(count < empty.length) showToast('休息區人數不足，已填入可用球員');
+    else showToast('已隨機填滿場地');
+    if(state.settings.autoCallEnabled && moved.length) callPlayers(moved);
+  }
+
+  function callPlayers(names){
+    if(!Array.isArray(names) || !names.length){ showToast('目前沒有可呼叫的人員'); return; }
+    state.settings.lastCallPlayers = names.slice();
+    saveState();
+    const text = '請上場：' + names.join('、');
+    try{
+      window.speechSynthesis?.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const rate = state.settings.voiceRate;
+      const pitch = state.settings.voicePitch;
+      utter.rate = rate === 'slow' ? 0.78 : rate === 'fast' ? 1.18 : 0.95;
+      utter.pitch = pitch === 'low' ? 0.82 : pitch === 'high' ? 1.18 : 1;
+      utter.lang = 'zh-TW';
+      if(state.settings.voiceLang === 'zh-TW-first'){
+        const voices = window.speechSynthesis?.getVoices?.() || [];
+        const zh = voices.find(v => /zh|Chinese|Taiwan|Mandarin/i.test(v.lang + ' ' + v.name));
+        if(zh) utter.voice = zh;
+      }
+      window.speechSynthesis?.speak(utter);
+    }catch(err){ console.error(err); }
+  }
+
+  function repeatLastCall(){
+    const names = state.settings.lastCallPlayers || [];
+    if(!names.length){ showToast('目前沒有可重複呼叫的人員'); return; }
+    callPlayers(names);
+  }
+
+  function saveVoiceSettings(){
+    state.settings.voiceRate = $('voiceRateSelect').value;
+    state.settings.voicePitch = $('voicePitchSelect').value;
+    state.settings.voiceLang = $('voiceLangSelect').value;
+    saveState();
+    showToast('語音設定已儲存');
+    render();
+  }
+
+  function exportJson(){
+    const payload = clone(state);
+    payload.exportedAt = nowIso();
+    payload.version = APP_VERSION;
+    downloadText(`badminton-3x3-backup-${localStamp()}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    showToast('備份檔已產生，請確認已儲存');
+  }
+
+  function exportLogCsv(){
+    const rows = [['logId','time','action','zone','players','note']].concat(state.gameLog.map(l => [l.logId,l.time,l.action,l.zone,(l.players||[]).join('、'),l.note||'']));
+    const csv = rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g,'""') + '"').join(',')).join('\n');
+    downloadText(`badminton-3x3-log-${localStamp()}.csv`, '\ufeff' + csv, 'text/csv;charset=utf-8');
+  }
+
+  function downloadText(filename, text, type){
+    const blob = new Blob([text], {type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 400);
+  }
+
+  async function handleImportFile(file){
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const playerCount = Array.isArray(data.players) ? data.players.length : 0;
+      const exportedAt = data.exportedAt || data.updatedAt || '未知';
+      const extra = `<div class="backup-summary">版本：${escapeHtml(data.version || '未知')}<br>匯出時間：${escapeHtml(exportedAt)}<br>球員數：${playerCount}<br>場地：3 Court / 3 Next</div>`;
+      const ok = await confirmDialog('匯入備份 JSON','匯入會覆蓋目前資料。建議先匯出目前備份。是否繼續？', extra);
+      if(!ok) return;
+      const normalized = normalizeState(data);
+      if(!Array.isArray(normalized.players)) throw new Error('格式錯誤');
+      state = normalized;
+      selectedPlayer = null;
+      saveState();
+      showToast('匯入完成');
+      render();
+    }catch(err){
+      console.error(err);
+      showToast('匯入失敗，請確認 JSON 檔格式');
+    }finally{
+      $('importFileInput').value = '';
+    }
+  }
+
+  function setPanel(open){
+    panelOpen = open;
+    $('floatPanel').classList.toggle('open', panelOpen);
+  }
+  function openPanel(){ setPanel(true); renderPanel(); }
+  function closePanel(){ setPanel(false); }
+
+  function initFloatingButton(){
+    const btn = $('floatButton');
+    const pos = state.settings.floating || {side:'left', y:0.45};
+    const y = Math.max(74, Math.min(window.innerHeight - 82, window.innerHeight * (Number(pos.y)||0.45)));
+    btn.style.top = y + 'px';
+    btn.style.left = pos.side === 'right' ? 'auto' : '12px';
+    btn.style.right = pos.side === 'right' ? '12px' : 'auto';
+
+    btn.addEventListener('pointerdown', (e) => {
+      floatingDrag = {active:true, moved:false, dx:e.clientX - btn.getBoundingClientRect().left, dy:e.clientY - btn.getBoundingClientRect().top};
+      btn.setPointerCapture?.(e.pointerId);
+    });
+    btn.addEventListener('pointermove', (e) => {
+      if(!floatingDrag.active) return;
+      floatingDrag.moved = true;
+      const x = Math.max(4, Math.min(window.innerWidth - btn.offsetWidth - 4, e.clientX - floatingDrag.dx));
+      const y2 = Math.max(54, Math.min(window.innerHeight - btn.offsetHeight - 8, e.clientY - floatingDrag.dy));
+      btn.style.left = x + 'px'; btn.style.right = 'auto'; btn.style.top = y2 + 'px';
+    });
+    btn.addEventListener('pointerup', (e) => {
+      if(!floatingDrag.active) return;
+      btn.releasePointerCapture?.(e.pointerId);
+      floatingDrag.active = false;
+      snapFloatingButton();
+      setTimeout(() => { floatingDrag.moved = false; }, 0);
+    });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if(floatingDrag.moved) return;
+      panelOpen ? closePanel() : openPanel();
+    });
+  }
+
+  function snapFloatingButton(){
+    const btn = $('floatButton');
+    const rect = btn.getBoundingClientRect();
+    const side = rect.left + rect.width/2 < window.innerWidth/2 ? 'left' : 'right';
+    btn.style.left = side === 'left' ? '12px' : 'auto';
+    btn.style.right = side === 'right' ? '12px' : 'auto';
+    const y = Math.max(54, Math.min(window.innerHeight - rect.height - 8, rect.top));
+    btn.style.top = y + 'px';
+    state.settings.floating = {side, y: y / window.innerHeight};
+    saveState();
+  }
+
+  function bindEvents(){
+    document.addEventListener('click', (e) => {
+      const chip = e.target.closest('.player-chip');
+      if(chip){
+        const inRest = !!chip.closest('#restList');
+        selectPlayer(chip.dataset.playerId, {closePanelAfterSelect:inRest});
+        e.stopPropagation();
+        return;
+      }
+      const slot = e.target.closest('.slot');
+      if(slot){
+        if(!selectedPlayer){ showToast('請先點選球員'); return; }
+        const moved = movePlayer(selectedPlayer.playerId, slot.dataset.zone, Number(slot.dataset.slot));
+        if(moved){ selectedPlayer = null; showToast('已移動'); render(); }
+        else showToast('移動失敗');
+        e.stopPropagation();
+        return;
+      }
+      const courtBtn = e.target.closest('.court-down-btn');
+      if(courtBtn){ courtDown(courtBtn.dataset.court); e.stopPropagation(); return; }
+      const nextBtn = e.target.closest('.next-up-btn');
+      if(nextBtn){ nextUp(nextBtn.dataset.next); e.stopPropagation(); return; }
+    });
+
+    $('cancelSelectBtn').onclick = () => clearSelected('已取消選取');
+    $('closePanelBtn').onclick = (e) => { e.stopPropagation(); closePanel(); };
+    $('repeatCallBtn').onclick = (e) => { e.stopPropagation(); repeatLastCall(); };
+    $('toggleRestBtn').onclick = (e) => { e.stopPropagation(); restVisible = !restVisible; renderPanel(); };
+    $('toggleAdminBtn').onclick = (e) => { e.stopPropagation(); adminVisible = !adminVisible; renderPanel(); };
+    $('moveRestBtn').onclick = (e) => {
+      e.stopPropagation();
+      const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+      if(!p){ showToast('請先選取球員'); return; }
+      if(p.zone === 'rest'){ showToast('此球員已在休息區'); return; }
+      if(movePlayer(p.id,'rest',null)){ selectedPlayer = null; showToast('已回到休息區'); render(); }
+    };
+    $('adminLoginBtn').onclick = () => {
+      if($('adminPasswordInput').value === state.settings.adminPassword){ isAdmin = true; $('adminPasswordInput').value=''; showToast('管理員模式已開啟'); renderPanel(); }
+      else showToast('密碼錯誤');
+    };
+    $('freeModeBtn').onclick = () => { state.settings.freePlayMode=true; state.settings.autoArrangeMode=false; saveState(); renderPanel(); };
+    $('autoModeBtn').onclick = () => { state.settings.freePlayMode=false; state.settings.autoArrangeMode=true; saveState(); showToast('已切換自動排場設定'); renderPanel(); };
+    $('randomFillBtn').onclick = randomFillCourts;
+    $('autoCallOffBtn').onclick = () => { state.settings.autoCallEnabled=false; saveState(); renderPanel(); };
+    $('autoCallOnBtn').onclick = () => { state.settings.autoCallEnabled=true; saveState(); renderPanel(); };
+    $('voiceTestBtn').onclick = () => callPlayers(['測試','請上場']);
+    $('saveVoiceBtn').onclick = saveVoiceSettings;
+    $('addPlayerBtn').onclick = () => addPlayer($('newPlayerInput').value);
+    $('newPlayerInput').addEventListener('keydown', e => { if(e.key==='Enter') addPlayer($('newPlayerInput').value); });
+    $('renamePlayerBtn').onclick = renameSelected;
+    $('deletePlayerBtn').onclick = deleteSelected;
+    $('plusGameBtn').onclick = () => adjustSelectedGames(1);
+    $('minusGameBtn').onclick = () => adjustSelectedGames(-1);
+    $('zeroPlayerBtn').onclick = zeroSelectedGames;
+    $('resetAllGamesBtn').onclick = resetAllGames;
+    $('resetTodayBtn').onclick = resetToday;
+    $('clearAllBtn').onclick = clearAll;
+    $('exportBackupBtn').onclick = exportJson;
+    $('exportLogBtn').onclick = exportLogCsv;
+    $('importBackupBtn').onclick = () => $('importFileInput').click();
+    $('importFileInput').onchange = e => handleImportFile(e.target.files?.[0]);
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { snapFloatingButton(); }, 150);
+    });
+  }
+
+  function registerServiceWorker(){
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.warn);
+      });
+    }
+  }
+
+  function init(){
+    bindEvents();
+    initFloatingButton();
+    render();
+    registerServiceWorker();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
