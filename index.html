@@ -67,7 +67,8 @@
     .slot.empty::after{content:"點此放入";color:#94a3b8;font-weight:900;font-size:clamp(14px,1.5vw,20px)}
     .zone-action{display:none;}
     .player-chip{position:relative;width:100%;height:100%;min-height:54px;border-radius:15px;border:3px solid rgba(255,255,255,.95);box-shadow:0 4px 10px rgba(15,23,42,.18);display:flex;align-items:center;justify-content:center;padding:8px 8px 6px;overflow:hidden;color:#0f172a;user-select:none;}
-    .player-chip.selected{outline:4px solid #facc15;box-shadow:0 0 0 6px rgba(250,204,21,.35),0 8px 18px rgba(15,23,42,.22);}
+    .player-chip.selected{transform:scale(.96);border-color:#111827;box-shadow:inset 0 0 0 3px #fff,0 4px 12px rgba(15,23,42,.25);}
+    .player-chip.selected::after{content:"✓";position:absolute;top:4px;right:6px;z-index:3;width:24px;height:24px;border-radius:999px;background:#111827;color:#fff;font-size:16px;font-weight:1000;line-height:24px;text-align:center;}
     .player-chip .games{position:absolute;top:4px;left:6px;z-index:1;background:rgba(255,255,255,.95);border:1px solid rgba(15,23,42,.18);border-radius:999px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:clamp(15px,1.8vw,22px);font-weight:1000;line-height:1;padding:0 6px;}
     .player-chip .name{position:relative;z-index:2;text-align:center;font-weight:1000;line-height:1.05;letter-spacing:.02em;font-size:clamp(20px,2.6vw,34px);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px;}
     .rest-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;}
@@ -86,7 +87,7 @@
     .quick-grid .wide-action{grid-column:1 / -1;min-height:96px;font-size:24px;}
     .panel-section{border:1px solid #e2e8f0;border-radius:18px;background:#fff;margin:10px 0;padding:12px;}
     .panel-section h3{margin:0 0 10px;font-size:19px;font-weight:1000;color:#0f766e;}
-    .collapse-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:14px;margin-bottom:10px;text-align:left;}
+    .collapse-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f8fafc;color:#0f766e;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:10px;text-align:left;font-size:24px;font-weight:1000;}
     .collapse-head::after{content:"🔼";font-size:16px;color:#475569;margin-left:auto;}
     .panel-section.collapsed .collapse-head::after{content:"🔽";}
     .panel-section.collapsed .collapsible-body{display:none;}
@@ -181,45 +182,36 @@
       <div class="quick-grid">
         <button class="warn wide-action" id="moveRestBtn">回到休息區</button>
         <button class="primary" id="repeatCallBtn">再叫一次</button>
-        <button class="ghost" id="toggleRestBtn">休息區</button>
-        <button class="ghost" id="toggleAdminBtn">Admin</button>
       </div>
 
       <div id="panelHint" class="backup-summary">未選取球員。可從場地或休息區點選人名。</div>
 
-      <section class="panel-section" id="restSection" style="display:none">
-        <h3>休息區</h3>
-        <div class="help">點選球員後，面板會自動縮小，接著點 Court / Next 空格放入。</div>
-        <div class="rest-list" id="restList"></div>
+      <section class="panel-section" id="restSection">
+        <button class="collapse-head" data-collapse-target="restSectionBody" type="button" id="restSectionHead">休息區 0人</button>
+        <div class="collapsible-body" id="restSectionBody">
+          <div class="help">點選球員後，面板會自動縮小，接著點 Court / Next 空格放入。</div>
+          <div class="rest-list" id="restList"></div>
+        </div>
       </section>
 
-      <section class="panel-section" id="adminSection" style="display:none">
-        <h3>Admin</h3>
-        <div id="adminLoginBox">
-          <label>管理員密碼</label>
-          <input id="adminPasswordInput" type="password" inputmode="numeric" placeholder="預設 1111" />
-          <button class="primary" id="adminLoginBtn" style="width:100%;margin-top:8px">登入</button>
-        </div>
-        <div id="adminTools" style="display:none">
-          <div class="backup-summary">管理員模式已開啟</div>
-
-          <div class="panel-section">
-            <h3>排場模式</h3>
-            <div class="mode-row">
-              <button id="freeModeBtn">自由暢打</button>
-              <button id="autoModeBtn">自動排場</button>
-            </div>
-            <button class="primary" id="randomFillBtn" style="width:100%;margin-top:8px">隨機填滿場地</button>
+      <section class="panel-section" id="adminSection">
+        <button class="collapse-head" data-collapse-target="adminSectionBody" type="button" id="adminSectionHead">Admin</button>
+        <div class="collapsible-body" id="adminSectionBody">
+          <div id="adminLoginBox">
+            <label>管理員密碼</label>
+            <input id="adminPasswordInput" type="password" inputmode="numeric" placeholder="" />
+            <button class="primary" id="adminLoginBtn" style="width:100%;margin-top:8px">登入</button>
           </div>
+          <div id="adminTools" style="display:none">
+            <div class="backup-summary">管理員模式已開啟</div>
 
-          <div class="panel-section">
-            <h3>自動呼叫</h3>
+            <div class="panel-section">
+              <button class="collapse-head" data-collapse-target="autoCallBody" type="button">自動呼叫</button>
+              <div class="collapsible-body" id="autoCallBody">
             <div class="toggle-row">
               <button id="autoCallOffBtn">關閉</button>
               <button id="autoCallOnBtn">開啟</button>
             </div>
-            <button class="collapse-head" data-collapse-target="voiceSettingsBody" type="button" style="margin-top:8px">語音設定</button>
-            <div class="collapsible-body" id="voiceSettingsBody">
               <label>語速</label>
               <select id="voiceRateSelect"><option value="slow">慢</option><option value="normal">正常</option><option value="fast">快</option></select>
               <label>音調</label>
@@ -230,8 +222,8 @@
                 <button id="voiceTestBtn">語音設定 / 試播</button>
                 <button id="saveVoiceBtn">儲存設定</button>
               </div>
+              </div>
             </div>
-          </div>
 
           <div class="panel-section">
             <button class="collapse-head" data-collapse-target="playerManageBody" type="button">球員管理</button>
@@ -266,6 +258,11 @@
             <button class="collapse-head" data-collapse-target="systemOpsBody" type="button">系統操作</button>
             <div class="collapsible-body" id="systemOpsBody">
               <div class="button-grid single">
+                <div class="mode-row">
+                  <button id="freeModeBtn">自由暢打</button>
+                  <button id="autoModeBtn">自動排場</button>
+                </div>
+                <button class="primary" id="randomFillBtn">隨機填滿場地</button>
                 <button class="warn" id="resetTodayBtn">今日重新開始</button>
                 <button id="exportBackupBtn">匯出球員名單 JSON</button>
                 <button id="importBackupBtn">匯入球員名單 JSON</button>
@@ -306,20 +303,19 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.3.0';
+  const APP_VERSION = '2.3.1';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
   const SLOTS = [1,2,3,4];
   const COLORS = ['#bfdbfe','#bbf7d0','#fde68a','#fecaca','#ddd6fe','#fed7aa','#bae6fd','#fbcfe8','#ccfbf1','#e9d5ff','#d9f99d','#fef3c7'];
+  const DEFAULT_COLLAPSED_SECTIONS = ['restSectionBody','adminSectionBody','autoCallBody','playerManageBody','gamesManageBody','systemOpsBody'];
 
   let state = loadState();
   let selectedPlayer = null;
   let isAdmin = false;
   let panelOpen = false;
-  let restVisible = false;
-  let adminVisible = false;
-  let collapsedSections = new Set(['voiceSettingsBody','gamesManageBody','systemOpsBody']);
+  let collapsedSections = new Set(state.settings.collapsedSections || DEFAULT_COLLAPSED_SECTIONS);
   let selectedNewPlayerColor = COLORS[0];
   let floatingDrag = { active:false, moved:false, dx:0, dy:0 };
 
@@ -356,7 +352,8 @@
         voicePitch:'normal',
         voiceLang:'zh-TW-first',
         lastCallPlayers:[],
-        floating:{ side:'left', y:0.45 }
+        floating:{ side:'left', y:0.45 },
+        collapsedSections:DEFAULT_COLLAPSED_SECTIONS.slice()
       },
       gameLog:[]
     };
@@ -380,6 +377,9 @@
     merged.settings = Object.assign(base.settings, data?.settings || {});
     merged.settings.courtCount = Number(merged.settings.courtCount) === 2 ? 2 : 3;
     merged.settings.nextCount = merged.settings.courtCount;
+    merged.settings.collapsedSections = Array.isArray(merged.settings.collapsedSections)
+      ? merged.settings.collapsedSections.filter(id => DEFAULT_COLLAPSED_SECTIONS.includes(id))
+      : DEFAULT_COLLAPSED_SECTIONS.slice();
     merged.players = Array.isArray(data?.players) ? data.players : [];
     merged.gameLog = Array.isArray(data?.gameLog) ? data.gameLog : [];
     merged.players.forEach((p, i) => {
@@ -537,11 +537,7 @@
       hint.textContent = '未選取球員。可從場地或休息區點選人名。';
       $('moveRestBtn').style.display = 'none';
     }
-    $('restSection').style.display = restVisible ? '' : 'none';
-    $('adminSection').style.display = adminVisible ? '' : 'none';
     $('panelTitle').innerHTML = isAdmin ? `羽球排場 ${currentMode()} <span class="version-inline">| V ${APP_VERSION}</span>` : '管理員工具';
-    $('toggleRestBtn').textContent = `休息區 ${restVisible ? '🔼' : '🔽'}`;
-    $('toggleAdminBtn').textContent = `Admin ${adminVisible ? '🔼' : '🔽'}`;
     renderRestList();
     renderAdminUi();
     renderColorPicker();
@@ -550,12 +546,14 @@
 
   function renderRestList(){
     const players = restPlayers();
+    $('restSectionHead').textContent = `休息區 ${players.length}人`;
     $('restList').innerHTML = players.length
       ? players.map(playerChipHtml).join('')
       : '<div class="help">休息區目前沒有人</div>';
   }
 
   function renderAdminUi(){
+    $('adminSectionHead').textContent = isAdmin ? 'Admin 已登入' : 'Admin';
     $('adminLoginBox').style.display = isAdmin ? 'none' : '';
     $('adminTools').style.display = isAdmin ? '' : 'none';
     $('freeModeBtn').classList.toggle('active', !!state.settings.freePlayMode);
@@ -588,6 +586,11 @@
       if(!body || !section) return;
       section.classList.toggle('collapsed', collapsedSections.has(body.id));
     });
+  }
+
+  function saveCollapsedSections(){
+    state.settings.collapsedSections = Array.from(collapsedSections);
+    saveState();
   }
 
   function selectPlayer(playerId, options={}){
@@ -1101,8 +1104,6 @@
     $('cancelSelectBtn').onclick = () => clearSelected('已取消選取');
     $('closePanelBtn').onclick = (e) => { e.stopPropagation(); closePanel(); };
     $('repeatCallBtn').onclick = (e) => { e.stopPropagation(); repeatLastCall(); };
-    $('toggleRestBtn').onclick = (e) => { e.stopPropagation(); restVisible = !restVisible; renderPanel(); };
-    $('toggleAdminBtn').onclick = (e) => { e.stopPropagation(); adminVisible = !adminVisible; renderPanel(); };
     $('moveRestBtn').onclick = (e) => {
       e.stopPropagation();
       const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
@@ -1111,7 +1112,14 @@
       if(movePlayer(p.id,'rest',null)){ selectedPlayer = null; showToast('已回到休息區'); render(); }
     };
     $('adminLoginBtn').onclick = () => {
-      if($('adminPasswordInput').value === state.settings.adminPassword){ isAdmin = true; $('adminPasswordInput').value=''; showToast('管理員模式已開啟'); renderPanel(); }
+      if($('adminPasswordInput').value === state.settings.adminPassword){
+        isAdmin = true;
+        $('adminPasswordInput').value='';
+        collapsedSections.delete('adminSectionBody');
+        saveCollapsedSections();
+        showToast('管理員模式已開啟');
+        renderPanel();
+      }
       else showToast('密碼錯誤');
     };
     $('freeModeBtn').onclick = () => { state.settings.freePlayMode=true; state.settings.autoArrangeMode=false; saveState(); renderPanel(); };
@@ -1149,6 +1157,7 @@
         const target = btn.dataset.collapseTarget;
         if(collapsedSections.has(target)) collapsedSections.delete(target);
         else collapsedSections.add(target);
+        saveCollapsedSections();
         renderCollapsedSections();
       };
     });
