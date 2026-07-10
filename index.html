@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="羽球排場" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>羽球排場 3x3</title>
+  <title>羽球排場 2x2 / 3x3</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
   <style>
@@ -54,6 +54,7 @@
     .board-section{margin:0 0 8px;}
     .section-title{display:none;}
     .zone-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+    .zone-row.mode-2{grid-template-columns:repeat(2,minmax(0,1fr));}
     .zone-card{background:rgba(255,255,255,.96);border:1px solid #bae6fd;border-radius:var(--radius);box-shadow:0 10px 22px rgba(15,23,42,.1);padding:8px;min-width:0;}
     .zone-head{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;border:1px solid #99f6e4;background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;border-radius:14px;min-height:44px;padding:8px 10px;text-align:left;}
     .zone-head.warn{background:linear-gradient(135deg,#92400e,#f59e0b);border-color:#facc15;}
@@ -85,9 +86,9 @@
     .quick-grid .wide-action{grid-column:1 / -1;min-height:96px;font-size:24px;}
     .panel-section{border:1px solid #e2e8f0;border-radius:18px;background:#fff;margin:10px 0;padding:12px;}
     .panel-section h3{margin:0 0 10px;font-size:19px;font-weight:1000;color:#0f766e;}
-    .collapse-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:14px;margin-bottom:10px;}
-    .collapse-head::after{content:"收合";font-size:14px;color:#475569;}
-    .panel-section.collapsed .collapse-head::after{content:"展開";}
+    .collapse-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:14px;margin-bottom:10px;text-align:left;}
+    .collapse-head::after{content:"🔼";font-size:16px;color:#475569;margin-left:auto;}
+    .panel-section.collapsed .collapse-head::after{content:"🔽";}
     .panel-section.collapsed .collapsible-body{display:none;}
     .button-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
     .button-grid.single{grid-template-columns:1fr;}
@@ -97,8 +98,10 @@
     .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     .toggle-row button.active{background:#0f766e;color:#fff}
     .color-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:8px 0 10px;}
-    .color-swatch{min-height:42px;border-radius:12px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.2);padding:0;}
-    .color-swatch.active{box-shadow:0 0 0 4px #0f766e;border-color:#fff;}
+    .color-swatch{position:relative;min-height:42px;border-radius:12px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.2);padding:0;transition:transform .15s ease,box-shadow .15s ease;}
+    .color-swatch.active{transform:scale(1.08);border-color:#fff;box-shadow:0 0 0 3px #111827,0 0 0 6px #fff,0 6px 14px rgba(15,23,42,.22);}
+    .color-swatch.active::after{content:"✓";position:absolute;top:-9px;right:-9px;width:22px;height:22px;border-radius:999px;background:#111827;color:#fff;font-size:15px;font-weight:1000;line-height:22px;text-align:center;}
+    .mode-status{font-weight:900;color:#334155;margin:4px 0 8px;}
     .toast{position:fixed;left:50%;bottom:calc(18px + var(--safe-bottom));transform:translateX(-50%) translateY(120px);opacity:0;background:#0f172a;color:#fff;border-radius:999px;padding:12px 18px;font-weight:900;font-size:17px;z-index:80;box-shadow:var(--shadow);max-width:calc(100vw - 24px);text-align:center;transition:.25s ease;}
     .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
     .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:70;display:none;align-items:center;justify-content:center;padding:18px;}
@@ -148,7 +151,7 @@
   <div class="portrait-warning phone">
     <div class="portrait-card">
       <div class="big">請將手機轉為橫向使用</div>
-      <div class="small">橫向後會顯示完整 3x3 排場畫面</div>
+      <div class="small">橫向後會顯示完整排場畫面</div>
     </div>
   </div>
 
@@ -231,17 +234,19 @@
           </div>
 
           <div class="panel-section">
-            <h3>球員管理</h3>
-            <label>新增球員</label>
-            <input id="newPlayerInput" type="text" placeholder="輸入姓名" />
-            <label>貼紙底色</label>
-            <div class="color-grid" id="newPlayerColorGrid" aria-label="新增球員貼紙底色"></div>
-            <button class="primary" id="addPlayerBtn" style="width:100%;margin-top:8px">新增球員</button>
-            <label>修改選取球員姓名</label>
-            <input id="renamePlayerInput" type="text" placeholder="先選取球員" />
-            <div class="button-grid" style="margin-top:8px">
-              <button id="renamePlayerBtn">修改姓名</button>
-              <button class="danger" id="deletePlayerBtn">刪除球員</button>
+            <button class="collapse-head" data-collapse-target="playerManageBody" type="button">球員管理</button>
+            <div class="collapsible-body" id="playerManageBody">
+              <label>新增球員</label>
+              <input id="newPlayerInput" type="text" placeholder="輸入姓名" />
+              <label>貼紙底色</label>
+              <div class="color-grid" id="newPlayerColorGrid" aria-label="新增球員貼紙底色"></div>
+              <button class="primary" id="addPlayerBtn" style="width:100%;margin-top:8px">新增球員</button>
+              <label>修改選取球員姓名</label>
+              <input id="renamePlayerInput" type="text" placeholder="先選取球員" />
+              <div class="button-grid" style="margin-top:8px">
+                <button id="renamePlayerBtn">修改姓名</button>
+                <button class="danger" id="deletePlayerBtn">刪除球員</button>
+              </div>
             </div>
           </div>
 
@@ -262,13 +267,20 @@
             <div class="collapsible-body" id="systemOpsBody">
               <div class="button-grid single">
                 <button class="warn" id="resetTodayBtn">今日重新開始</button>
-                <button id="exportBackupBtn">匯出備份 JSON</button>
-                <button id="importBackupBtn">匯入備份 JSON</button>
+                <button id="exportBackupBtn">匯出球員名單 JSON</button>
+                <button id="importBackupBtn">匯入球員名單 JSON</button>
                 <button id="exportLogBtn">匯出今日紀錄 CSV</button>
                 <button class="danger" id="clearAllBtn">清空全部資料</button>
+                <div id="courtModeControls">
+                  <div class="mode-status" id="courtModeStatus">目前模式：3x3</div>
+                  <div class="mode-row">
+                    <button id="use3x3Btn">使用 3x3</button>
+                    <button id="use2x2Btn">使用 2x2</button>
+                  </div>
+                </div>
               </div>
               <input class="file-input" id="importFileInput" type="file" accept=".json,application/json" />
-              <div class="help">匯入會覆蓋目前資料，建議先匯出目前備份。</div>
+              <div class="help">匯入球員名單會清空目前 Court / Next，並把球員放回休息區。</div>
             </div>
           </div>
         </div>
@@ -294,7 +306,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.2.1';
+  const APP_VERSION = '2.3.0';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -327,7 +339,7 @@
 
   function defaultState(){
     return {
-      app:'badminton-court-3x3',
+      app:'badminton-court-2x2-3x3',
       version:APP_VERSION,
       createdAt:nowIso(),
       updatedAt:nowIso(),
@@ -366,6 +378,8 @@
     const base = defaultState();
     const merged = Object.assign(base, data || {});
     merged.settings = Object.assign(base.settings, data?.settings || {});
+    merged.settings.courtCount = Number(merged.settings.courtCount) === 2 ? 2 : 3;
+    merged.settings.nextCount = merged.settings.courtCount;
     merged.players = Array.isArray(data?.players) ? data.players : [];
     merged.gameLog = Array.isArray(data?.gameLog) ? data.gameLog : [];
     merged.players.forEach((p, i) => {
@@ -391,6 +405,11 @@
   }
 
   function validZone(zone){ return zone === 'rest' || COURTS.includes(zone) || NEXTS.includes(zone); }
+  function activeCourts(){ return COURTS.slice(0, Number(state.settings.courtCount) === 2 ? 2 : 3); }
+  function activeNexts(){ return NEXTS.slice(0, Number(state.settings.nextCount) === 2 ? 2 : 3); }
+  function currentMode(){ return Number(state.settings.courtCount) === 2 ? '2x2' : '3x3'; }
+  function boardPlayers(){ return activePlayers().filter(p => COURTS.includes(p.zone) || NEXTS.includes(p.zone)); }
+  function isBoardEmpty(){ return boardPlayers().length === 0; }
   function getPlayer(id){ return state.players.find(p => p.id === id && p.isActive !== false) || null; }
   function activePlayers(){ return state.players.filter(p => p.isActive !== false); }
   function zonePlayers(zone){ return activePlayers().filter(p => p.zone === zone).sort((a,b) => (a.slot || 99) - (b.slot || 99)); }
@@ -472,8 +491,10 @@
   }
 
   function renderZones(){
-    $('courtRow').innerHTML = COURTS.map(z => renderZoneCard(z, true)).join('');
-    $('nextRow').innerHTML = NEXTS.map(z => renderZoneCard(z, false)).join('');
+    $('courtRow').classList.toggle('mode-2', activeCourts().length === 2);
+    $('nextRow').classList.toggle('mode-2', activeNexts().length === 2);
+    $('courtRow').innerHTML = activeCourts().map(z => renderZoneCard(z, true)).join('');
+    $('nextRow').innerHTML = activeNexts().map(z => renderZoneCard(z, false)).join('');
   }
 
   function renderZoneCard(zone, isCourt){
@@ -518,7 +539,9 @@
     }
     $('restSection').style.display = restVisible ? '' : 'none';
     $('adminSection').style.display = adminVisible ? '' : 'none';
-    $('panelTitle').innerHTML = isAdmin ? `羽球排場 3x3 <span class="version-inline">| V ${APP_VERSION}</span>` : '管理員工具';
+    $('panelTitle').innerHTML = isAdmin ? `羽球排場 ${currentMode()} <span class="version-inline">| V ${APP_VERSION}</span>` : '管理員工具';
+    $('toggleRestBtn').textContent = `休息區 ${restVisible ? '🔼' : '🔽'}`;
+    $('toggleAdminBtn').textContent = `Admin ${adminVisible ? '🔼' : '🔽'}`;
     renderRestList();
     renderAdminUi();
     renderColorPicker();
@@ -539,6 +562,9 @@
     $('autoModeBtn').classList.toggle('active', !!state.settings.autoArrangeMode);
     $('autoCallOffBtn').classList.toggle('active', !state.settings.autoCallEnabled);
     $('autoCallOnBtn').classList.toggle('active', !!state.settings.autoCallEnabled);
+    if($('courtModeStatus')) $('courtModeStatus').textContent = `目前模式：${currentMode()}`;
+    if($('use3x3Btn')) $('use3x3Btn').classList.toggle('active', currentMode() === '3x3');
+    if($('use2x2Btn')) $('use2x2Btn').classList.toggle('active', currentMode() === '2x2');
     $('voiceRateSelect').value = state.settings.voiceRate || 'normal';
     $('voicePitchSelect').value = state.settings.voicePitch || 'normal';
     $('voiceLangSelect').value = state.settings.voiceLang || 'zh-TW-first';
@@ -635,7 +661,7 @@
   async function autoArrangeCourtDown(courtZone, players){
     players.forEach(p => { p.zone='rest'; p.slot=null; p.updatedAt=nowIso(); });
     const sorted = shuffleTiesByGames(players);
-    const nextSlots = emptySlots(NEXTS);
+    const nextSlots = emptySlots(activeNexts());
     const placed = [];
     const overflow = [];
     sorted.forEach((p, i) => {
@@ -674,7 +700,7 @@
   }
 
   function firstEmptyCourt(){
-    return COURTS.find(z => zonePlayers(z).length === 0) || null;
+    return activeCourts().find(z => zonePlayers(z).length === 0) || null;
   }
 
   async function nextUp(nextZone){
@@ -719,11 +745,12 @@
   }
 
   function shiftNextForwardAfter(nextZone){
-    const start = NEXTS.indexOf(nextZone);
+    const nexts = activeNexts();
+    const start = nexts.indexOf(nextZone);
     if(start < 0) return;
-    for(let i=start + 1;i<NEXTS.length;i++){
-      const from = NEXTS[i];
-      const to = NEXTS[i - 1];
+    for(let i=start + 1;i<nexts.length;i++){
+      const from = nexts[i];
+      const to = nexts[i - 1];
       zonePlayers(from).forEach(p => {
         p.zone = to;
         p.updatedAt = nowIso();
@@ -815,7 +842,7 @@
   }
 
   async function clearAll(){
-    const ok = await confirmDialog('清空全部資料','這會刪除所有球員與紀錄。建議先匯出備份 JSON。是否繼續？','');
+    const ok = await confirmDialog('清空全部資料','這會刪除所有球員與紀錄。建議先匯出球員名單 JSON。是否繼續？','');
     if(!ok) return;
     const ok2 = await confirmDialog('再次確認','真的要清空全部資料？此動作無法復原。','');
     if(!ok2) return;
@@ -826,9 +853,27 @@
     render();
   }
 
+  async function setCourtMode(count){
+    const mode = count === 2 ? '2x2' : '3x3';
+    if(currentMode() === mode){
+      showToast(`目前已是 ${mode} 模式`);
+      return;
+    }
+    if(!isBoardEmpty()){
+      await alertDialog('無法切換模式', '切換模式前，請先執行「今日重新開始」，確保 Court 與 Next 都是空的。');
+      return;
+    }
+    state.settings.courtCount = count === 2 ? 2 : 3;
+    state.settings.nextCount = count === 2 ? 2 : 3;
+    logAction('changeCourtMode','system',[],`切換為 ${mode}`);
+    saveState();
+    showToast(`已切換為 ${mode}`);
+    render();
+  }
+
   async function randomFillCourts(){
     const empty = [];
-    COURTS.concat(NEXTS).forEach(z => SLOTS.forEach(slot => { if(!occupant(z, slot)) empty.push({zone:z, slot}); }));
+    activeCourts().concat(activeNexts()).forEach(z => SLOTS.forEach(slot => { if(!occupant(z, slot)) empty.push({zone:z, slot}); }));
     if(empty.length === 0){ await alertDialog('場地已滿', 'Court 與 Next 都已滿，所有位置不動。'); return; }
     const rest = restPlayers();
     if(rest.length === 0){ showToast('休息區目前沒有人'); return; }
@@ -890,11 +935,23 @@
   }
 
   function exportJson(){
-    const payload = clone(state);
-    payload.exportedAt = nowIso();
-    payload.version = APP_VERSION;
-    downloadText(`badminton-3x3-backup-${localStamp()}.json`, JSON.stringify(payload, null, 2), 'application/json');
-    showToast('備份檔已產生，請確認已儲存');
+    const payload = {
+      app:'badminton-court-player-list',
+      backupType:'player-list',
+      version:APP_VERSION,
+      exportedAt:nowIso(),
+      players:activePlayers()
+        .slice()
+        .sort((a,b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name), 'zh-Hant'))
+        .map((p, index) => ({
+          name:p.name,
+          games:Number(p.games) || 0,
+          color:p.color || COLORS[index % COLORS.length],
+          sortOrder:Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : index + 1
+        }))
+    };
+    downloadText(`badminton-player-list-${localStamp()}.json`, JSON.stringify(payload, null, 2), 'application/json');
+    showToast('球員名單備份已下載');
   }
 
   function exportLogCsv(){
@@ -921,13 +978,21 @@
       const data = JSON.parse(text);
       const playerCount = Array.isArray(data.players) ? data.players.length : 0;
       const exportedAt = data.exportedAt || data.updatedAt || '未知';
-      const extra = `<div class="backup-summary">版本：${escapeHtml(data.version || '未知')}<br>匯出時間：${escapeHtml(exportedAt)}<br>球員數：${playerCount}<br>場地：3 Court / 3 Next</div>`;
-      const ok = await confirmDialog('匯入備份 JSON','匯入會覆蓋目前資料。建議先匯出目前備份。是否繼續？', extra);
+      const hasBoardPlayers = !isBoardEmpty();
+      const extra = `<div class="backup-summary">版本：${escapeHtml(data.version || '未知')}<br>匯出時間：${escapeHtml(exportedAt)}<br>球員數：${playerCount}<br>目前模式：${currentMode()}</div>`;
+      const message = hasBoardPlayers
+        ? '匯入球員名單會清空目前 Court / Next，並覆蓋現有球員名單。是否繼續？'
+        : '匯入球員名單會覆蓋現有球員名單，所有球員會放回休息區。是否繼續？';
+      const ok = await confirmDialog('匯入球員名單 JSON', message, extra);
       if(!ok) return;
-      const normalized = normalizeState(data);
-      if(!Array.isArray(normalized.players)) throw new Error('格式錯誤');
-      state = normalized;
+      const importedPlayers = normalizeImportedPlayers(data.players);
+      if(!importedPlayers.length && playerCount > 0) throw new Error('格式錯誤');
+      const keepSettings = clone(state.settings);
+      state.players = importedPlayers;
+      state.settings = keepSettings;
+      state.settings.lastCallPlayers = [];
       selectedPlayer = null;
+      logAction('importPlayerList','rest',importedPlayers.map(p=>p.name),'匯入球員名單，所有人回休息區');
       saveState();
       showToast('匯入完成');
       render();
@@ -937,6 +1002,25 @@
     }finally{
       $('importFileInput').value = '';
     }
+  }
+
+  function normalizeImportedPlayers(players){
+    if(!Array.isArray(players)) return [];
+    return players
+      .filter(p => p && p.isActive !== false && String(p.name || '').trim())
+      .map((p, index) => ({
+        id:uid('P'),
+        name:String(p.name || '').trim(),
+        games:Number.isFinite(Number(p.games)) ? Math.max(0, Number(p.games)) : 0,
+        color:p.color || COLORS[index % COLORS.length],
+        zone:'rest',
+        slot:null,
+        sortOrder:Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : index + 1,
+        isActive:true,
+        createdAt:nowIso(),
+        updatedAt:nowIso()
+      }))
+      .sort((a,b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name), 'zh-Hant'));
   }
 
   function setPanel(open){
@@ -1047,6 +1131,8 @@
     $('resetAllGamesBtn').onclick = resetAllGames;
     $('resetTodayBtn').onclick = resetToday;
     $('clearAllBtn').onclick = clearAll;
+    $('use3x3Btn').onclick = () => setCourtMode(3);
+    $('use2x2Btn').onclick = () => setCourtMode(2);
     $('exportBackupBtn').onclick = exportJson;
     $('exportLogBtn').onclick = exportLogCsv;
     $('importBackupBtn').onclick = () => $('importFileInput').click();
