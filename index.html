@@ -38,6 +38,7 @@
     button.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
     button.ghost{background:#f8fafc;border:1px solid var(--line)}
     button.small{min-height:40px;padding:8px 10px;font-size:16px;border-radius:12px}
+    button.cancel-select-strong{background:#dc2626;color:#fff;border:2px solid #991b1b;}
     input,select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;color:var(--ink);font-size:18px;}
     label{font-weight:800;font-size:16px;color:#334155;display:block;margin:6px 0 4px}
     .app-shell{min-height:100dvh;max-width:1366px;margin:0 auto;padding:8px 12px calc(12px + var(--safe-bottom));}
@@ -159,7 +160,7 @@
   <main class="app-shell" id="appShell">
     <div class="selected-banner" id="selectedBanner">
       <div id="selectedText">已選取</div>
-      <button class="small warn" id="cancelSelectBtn">取消選取</button>
+      <button class="small cancel-select-strong" id="cancelSelectBtn">取消選取</button>
     </div>
 
     <section class="board-section">
@@ -246,10 +247,10 @@
             <button class="collapse-head" data-collapse-target="gamesManageBody" type="button">場次管理</button>
             <div class="collapsible-body" id="gamesManageBody">
               <div class="button-grid">
-                <button id="plusGameBtn">選取 +1</button>
-                <button id="minusGameBtn">選取 -1</button>
-                <button id="zeroPlayerBtn">選取歸零</button>
-                <button class="warn" id="resetAllGamesBtn">全部場次歸零</button>
+                <button class="warn" id="plusGameBtn">選取 +1</button>
+                <button class="warn" id="minusGameBtn">選取 -1</button>
+                <button class="warn" id="zeroPlayerBtn">選取歸零</button>
+                <button class="danger" id="resetAllGamesBtn">全部場次歸零</button>
               </div>
             </div>
           </div>
@@ -303,7 +304,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.3.1';
+  const APP_VERSION = '2.3.2';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -345,13 +346,14 @@
         nextCount:3,
         playersPerCourt:4,
         adminPassword:'1111',
-        freePlayMode:true,
-        autoArrangeMode:false,
+        freePlayMode:false,
+        autoArrangeMode:true,
         autoCallEnabled:false,
         voiceRate:'normal',
         voicePitch:'normal',
         voiceLang:'zh-TW-first',
         lastCallPlayers:[],
+        lastCallCourt:null,
         floating:{ side:'left', y:0.45 },
         collapsedSections:DEFAULT_COLLAPSED_SECTIONS.slice()
       },
@@ -594,6 +596,10 @@
   }
 
   function selectPlayer(playerId, options={}){
+    if(selectedPlayer?.playerId === playerId){
+      clearSelected('已取消選取');
+      return;
+    }
     const p = getPlayer(playerId);
     if(!p) return;
     selectedPlayer = { playerId:p.id, name:p.name, fromZone:p.zone, fromSlot:p.slot ?? null };
@@ -643,7 +649,7 @@
     const players = zonePlayers(courtZone);
     if(players.length === 0){ showToast('這個球場目前沒有人'); return; }
     const modeNote = state.settings.autoArrangeMode
-      ? '自動排場模式：場次 +1 後先排入 Next 空格，再由 Next 1 自動上場。'
+      ? '自動排場模式：場次 +1 後，Next 1 先上場並向前遞補，下場人員再排入 Next 空格。'
       : '自由暢打模式：此球場人員場次會 +1 並回到休息區。';
     const countNote = players.length < 4 ? `<div class="backup-summary">提醒：${zoneLabel(courtZone)} 目前未滿 4 人，仍會照樣下場。</div>` : '';
     const ok = await confirmDialog('確認下場', `${zoneLabel(courtZone)} 下場？${modeNote}`, `${countNote}<div class="backup-summary">${players.map(p=>escapeHtml(p.name)).join('、')}</div>`);
@@ -663,6 +669,7 @@
 
   async function autoArrangeCourtDown(courtZone, players){
     players.forEach(p => { p.zone='rest'; p.slot=null; p.updatedAt=nowIso(); });
+    await autoNextUpToCourt('next1', courtZone, true);
     const sorted = shuffleTiesByGames(players);
     const nextSlots = emptySlots(activeNexts());
     const placed = [];
@@ -684,7 +691,6 @@
     if(overflow.length){
       await alertDialog('Next 空位不足', 'Next 空位不足，已依規則能放幾個放幾個，剩下回休息區。', `<div class="backup-summary">回休息區：${overflow.map(escapeHtml).join('、')}</div>`);
     }
-    await autoNextUpToCourt('next1', courtZone, true);
   }
 
   function emptySlots(zones){
@@ -721,11 +727,12 @@
     sorted.forEach((p,i) => { p.zone = court; p.slot = i+1; p.updatedAt = nowIso(); });
     const names = sorted.map(p=>p.name);
     state.settings.lastCallPlayers = names;
+    state.settings.lastCallCourt = court;
     logAction('nextUp',court,names,`${zoneLabel(nextZone)} 上場到 ${zoneLabel(court)}`);
     saveState();
     showToast(`${zoneLabel(nextZone)} 已上場`);
     render();
-    if(state.settings.autoCallEnabled) callPlayers(names);
+    if(state.settings.autoCallEnabled) callPlayers(names, court);
   }
 
   async function autoNextUpToCourt(nextZone, court, fromCourtDown){
@@ -741,10 +748,11 @@
     sorted.forEach((p,i) => { p.zone = court; p.slot = i+1; p.updatedAt = nowIso(); });
     const names = sorted.map(p=>p.name);
     state.settings.lastCallPlayers = names;
+    state.settings.lastCallCourt = court;
     shiftNextForwardAfter(nextZone);
     logAction('autoNextUp',court,names,`${zoneLabel(nextZone)} 上場到 ${zoneLabel(court)}，Next 向前遞補`);
     showToast(`${zoneLabel(nextZone)} 已上場`);
-    if(state.settings.autoCallEnabled) callPlayers(names);
+    if(state.settings.autoCallEnabled) callPlayers(names, court);
   }
 
   function shiftNextForwardAfter(nextZone){
@@ -838,6 +846,7 @@
     activePlayers().forEach(p => { p.zone='rest'; p.slot=null; p.games=0; p.updatedAt=nowIso(); });
     selectedPlayer = null;
     state.settings.lastCallPlayers = [];
+    state.settings.lastCallCourt = null;
     logAction('resetToday','all',[], '今日重新開始');
     saveState();
     showToast('已重新開始');
@@ -890,21 +899,26 @@
       p.updatedAt = nowIso();
       moved.push(p.name);
     }
-    state.settings.lastCallPlayers = moved;
     logAction('randomFillCourts','courts-next',moved,'隨機填滿 Court 與 Next 空格');
     saveState();
     render();
     if(count < shuffled.length) await alertDialog('場地已滿', '場地已滿，剩餘人員留在休息區。');
     else if(count < empty.length) showToast('休息區人數不足，已填入可用球員');
     else showToast('已隨機填滿場地');
-    if(state.settings.autoCallEnabled && moved.length) callPlayers(moved);
   }
 
-  function callPlayers(names){
+  function courtVoiceName(courtZone){
+    const map = {court1:'一號場', court2:'二號場', court3:'三號場'};
+    return map[courtZone] || '';
+  }
+
+  function callPlayers(names, courtZone=null){
     if(!Array.isArray(names) || !names.length){ showToast('目前沒有可呼叫的人員'); return; }
     state.settings.lastCallPlayers = names.slice();
+    state.settings.lastCallCourt = courtZone || null;
     saveState();
-    const text = '請上場：' + names.join('、');
+    const courtName = courtVoiceName(courtZone);
+    const text = courtName ? `${names.join('、')} 請上${courtName}` : '請上場：' + names.join('、');
     try{
       window.speechSynthesis?.cancel();
       const utter = new SpeechSynthesisUtterance(text);
@@ -925,7 +939,7 @@
   function repeatLastCall(){
     const names = state.settings.lastCallPlayers || [];
     if(!names.length){ showToast('目前沒有可重複呼叫的人員'); return; }
-    callPlayers(names);
+    callPlayers(names, state.settings.lastCallCourt || null);
   }
 
   function saveVoiceSettings(){
@@ -994,6 +1008,7 @@
       state.players = importedPlayers;
       state.settings = keepSettings;
       state.settings.lastCallPlayers = [];
+      state.settings.lastCallCourt = null;
       selectedPlayer = null;
       logAction('importPlayerList','rest',importedPlayers.map(p=>p.name),'匯入球員名單，所有人回休息區');
       saveState();
