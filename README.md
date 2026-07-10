@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.1.0｜3x3 iPad 單機 PWA 版
+# 羽球排場系統 v2.2.0｜3x3 iPad 單機 PWA 版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -47,3 +47,10 @@ https://你的GitHub帳號.github.io/badminton-3x3/
 - 匯入備份 JSON
 
 更新新版或換 iPad 前，請先匯出 JSON 備份。
+
+## v2.2.0 更新
+
+- 精簡主畫面，保留 3 個 Court 與 3 個 Next。
+- Court / Next 表頭整合為下場 / 上場按鈕。
+- 新增自動排場模式：下場後依場次排序補入 Next，並觸發 Next 向前遞補。
+- 改善管理員工具與摺疊操作。
