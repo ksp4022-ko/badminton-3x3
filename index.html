@@ -29,7 +29,7 @@
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{height:100%;margin:0;overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;}
-    body{min-height:100dvh;touch-action:manipulation;}
+    body{min-height:100vh;min-height:100dvh;touch-action:manipulation;}
     button,input,select{font:inherit}
     button{cursor:pointer;border:0;border-radius:14px;min-height:48px;font-weight:800;background:#e2e8f0;color:#0f172a;padding:10px 14px;}
     button:active{transform:translateY(1px)}
@@ -41,7 +41,7 @@
     button.cancel-select-strong{background:#dc2626;color:#fff;border:2px solid #991b1b;}
     input,select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;color:var(--ink);font-size:18px;}
     label{font-weight:800;font-size:16px;color:#334155;display:block;margin:6px 0 4px}
-    .app-shell{min-height:100dvh;max-width:1366px;margin:0 auto;padding:8px 12px calc(12px + var(--safe-bottom));}
+    .app-shell{min-height:100vh;min-height:100dvh;max-width:1366px;margin:0 auto;padding:8px 12px calc(12px + var(--safe-bottom));}
     .app-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px 10px;position:sticky;top:0;background:linear-gradient(180deg,rgba(236,254,255,.98),rgba(236,254,255,.86));z-index:10;backdrop-filter:blur(8px)}
     .title-wrap{display:flex;align-items:baseline;gap:10px;min-width:0;}
     .app-title{font-size:clamp(23px,2.4vw,34px);font-weight:950;letter-spacing:.02em;white-space:nowrap;}
@@ -63,7 +63,7 @@
     .zone-title{font-size:clamp(18px,2vw,25px);font-weight:950;color:#0f172a;white-space:nowrap;}
     .zone-head .zone-title,.zone-head .zone-count{color:#fff;}
     .zone-count{font-size:15px;color:#64748b;font-weight:800;white-space:nowrap;}
-    .slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,1fr);gap:8px;min-height:clamp(132px,21dvh,214px);}
+    .slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,1fr);gap:8px;min-height:132px;min-height:clamp(132px,21vh,214px);min-height:clamp(132px,21dvh,214px);}
     .slot{border:2px dashed #94a3b8;border-radius:16px;background:#f8fafc;min-height:54px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
     .slot.empty::after{content:"點此放入";color:#94a3b8;font-weight:900;font-size:clamp(14px,1.5vw,20px)}
     .zone-action{display:none;}
@@ -75,9 +75,9 @@
     .rest-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;}
     .rest-list .player-chip{min-height:52px;}
     .rest-list .player-chip .name{font-size:22px;}
-    .floating-button{position:fixed;left:12px;top:45dvh;width:64px;height:64px;border-radius:999px;background:linear-gradient(135deg,#0f766e,#06b6d4);color:#fff;font-size:28px;font-weight:1000;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:var(--shadow);touch-action:none;user-select:none;}
+    .floating-button{position:fixed;left:12px;top:45vh;top:45dvh;width:64px;height:64px;border-radius:999px;background:linear-gradient(135deg,#0f766e,#06b6d4);color:#fff;font-size:28px;font-weight:1000;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:var(--shadow);touch-action:none;user-select:none;}
     .floating-button.has-selected{background:linear-gradient(135deg,#f59e0b,#facc15);color:#422006;}
-    .float-panel{position:fixed;z-index:49;top:12px;right:12px;width:min(420px,calc(100vw - 24px));max-height:calc(100dvh - 24px);background:#ffffff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);display:none;overflow:hidden;}
+    .float-panel{position:fixed;z-index:49;top:12px;right:12px;width:420px;width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);background:#ffffff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);display:none;overflow:hidden;}
     .float-panel.open{display:flex;flex-direction:column;}
     .panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px;border-bottom:1px solid var(--line);background:#f8fafc;}
     .panel-title{font-size:22px;font-weight:1000;}
@@ -134,7 +134,7 @@
       .player-chip .name{font-size:clamp(17px,3vw,25px)}
       .player-chip .games{min-width:22px;height:22px;font-size:15px;top:3px;left:4px;}
       .floating-button{width:56px;height:56px;font-size:24px;}
-      .float-panel{left:8px;right:8px;top:auto;bottom:calc(8px + var(--safe-bottom));width:auto;max-height:85dvh;border-radius:20px;}
+      .float-panel{left:8px;right:8px;top:auto;bottom:calc(8px + var(--safe-bottom));width:auto;max-height:85vh;max-height:85dvh;border-radius:20px;}
       .panel-body{padding-bottom:calc(16px + var(--safe-bottom));}
     }
     @media (max-width:700px) and (orientation:portrait){
@@ -304,7 +304,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.3.2';
+  const APP_VERSION = '2.3.3';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -331,7 +331,7 @@
   function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,7).toUpperCase(); }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
   function escapeHtml(str){
-    return String(str ?? '').replace(/[&<>'"]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+    return String(str == null ? '' : str).replace(/[&<>'"]/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]; });
   }
 
   function defaultState(){
@@ -376,14 +376,14 @@
   function normalizeState(data){
     const base = defaultState();
     const merged = Object.assign(base, data || {});
-    merged.settings = Object.assign(base.settings, data?.settings || {});
+    merged.settings = Object.assign(base.settings, data && data.settings ? data.settings : {});
     merged.settings.courtCount = Number(merged.settings.courtCount) === 2 ? 2 : 3;
     merged.settings.nextCount = merged.settings.courtCount;
     merged.settings.collapsedSections = Array.isArray(merged.settings.collapsedSections)
       ? merged.settings.collapsedSections.filter(id => DEFAULT_COLLAPSED_SECTIONS.includes(id))
       : DEFAULT_COLLAPSED_SECTIONS.slice();
-    merged.players = Array.isArray(data?.players) ? data.players : [];
-    merged.gameLog = Array.isArray(data?.gameLog) ? data.gameLog : [];
+    merged.players = Array.isArray(data && data.players ? data.players : null) ? data.players : [];
+    merged.gameLog = Array.isArray(data && data.gameLog ? data.gameLog : null) ? data.gameLog : [];
     merged.players.forEach((p, i) => {
       p.id = p.id || uid('P');
       p.name = p.name || '未命名';
@@ -474,18 +474,18 @@
   }
 
   function playerChipHtml(p){
-    const selected = selectedPlayer?.playerId === p.id ? ' selected' : '';
+    const selected = selectedPlayer && selectedPlayer.playerId === p.id ? ' selected' : '';
     return `<div class="player-chip${selected}" data-player-id="${escapeHtml(p.id)}" style="background:${escapeHtml(p.color)}"><div class="games">${Number(p.games)||0}</div><div class="name">${escapeHtml(p.name)}</div></div>`;
   }
 
   function render(){
-    console.time?.('render');
+    if(console.time) console.time('render');
     renderHeader();
     renderZones();
     renderSelectedBanner();
     renderPanel();
     saveState();
-    console.timeEnd?.('render');
+    if(console.timeEnd) console.timeEnd('render');
   }
 
   function renderHeader(){
@@ -596,13 +596,13 @@
   }
 
   function selectPlayer(playerId, options={}){
-    if(selectedPlayer?.playerId === playerId){
+    if(selectedPlayer && selectedPlayer.playerId === playerId){
       clearSelected('已取消選取');
       return;
     }
     const p = getPlayer(playerId);
     if(!p) return;
-    selectedPlayer = { playerId:p.id, name:p.name, fromZone:p.zone, fromSlot:p.slot ?? null };
+    selectedPlayer = { playerId:p.id, name:p.name, fromZone:p.zone, fromSlot:p.slot == null ? null : p.slot };
     showToast(`已選取：${p.name}`);
     if(options.closePanelAfterSelect){ closePanel(); }
     render();
@@ -920,7 +920,7 @@
     const courtName = courtVoiceName(courtZone);
     const text = courtName ? `${names.join('、')} 請上${courtName}` : '請上場：' + names.join('、');
     try{
-      window.speechSynthesis?.cancel();
+      if(window.speechSynthesis && window.speechSynthesis.cancel) window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
       const rate = state.settings.voiceRate;
       const pitch = state.settings.voicePitch;
@@ -928,11 +928,11 @@
       utter.pitch = pitch === 'low' ? 0.82 : pitch === 'high' ? 1.18 : 1;
       utter.lang = 'zh-TW';
       if(state.settings.voiceLang === 'zh-TW-first'){
-        const voices = window.speechSynthesis?.getVoices?.() || [];
+        const voices = window.speechSynthesis && window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
         const zh = voices.find(v => /zh|Chinese|Taiwan|Mandarin/i.test(v.lang + ' ' + v.name));
         if(zh) utter.voice = zh;
       }
-      window.speechSynthesis?.speak(utter);
+      if(window.speechSynthesis && window.speechSynthesis.speak) window.speechSynthesis.speak(utter);
     }catch(err){ console.error(err); }
   }
 
@@ -972,8 +972,8 @@
   }
 
   function exportLogCsv(){
-    const rows = [['logId','time','action','zone','players','note']].concat(state.gameLog.map(l => [l.logId,l.time,l.action,l.zone,(l.players||[]).join('、'),l.note||'']));
-    const csv = rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g,'""') + '"').join(',')).join('\n');
+    const rows = [['logId','time','action','zone','players','note']].concat(state.gameLog.map(function(l){ return [l.logId,l.time,l.action,l.zone,(l.players||[]).join('、'),l.note||'']; }));
+    const csv = rows.map(function(r){ return r.map(function(v){ return '"' + String(v == null ? '' : v).replace(/"/g,'""') + '"'; }).join(','); }).join('\n');
     downloadText(`badminton-3x3-log-${localStamp()}.csv`, '\ufeff' + csv, 'text/csv;charset=utf-8');
   }
 
@@ -1056,24 +1056,40 @@
     btn.style.left = pos.side === 'right' ? 'auto' : '12px';
     btn.style.right = pos.side === 'right' ? '12px' : 'auto';
 
-    btn.addEventListener('pointerdown', (e) => {
-      floatingDrag = {active:true, moved:false, dx:e.clientX - btn.getBoundingClientRect().left, dy:e.clientY - btn.getBoundingClientRect().top};
-      btn.setPointerCapture?.(e.pointerId);
-    });
-    btn.addEventListener('pointermove', (e) => {
+    function pointFromEvent(e){
+      const touch = e.touches && e.touches.length ? e.touches[0] : (e.changedTouches && e.changedTouches.length ? e.changedTouches[0] : e);
+      return {x:touch.clientX, y:touch.clientY};
+    }
+    function startDrag(e){
+      const point = pointFromEvent(e);
+      floatingDrag = {active:true, moved:false, dx:point.x - btn.getBoundingClientRect().left, dy:point.y - btn.getBoundingClientRect().top};
+      if(btn.setPointerCapture && e.pointerId != null) btn.setPointerCapture(e.pointerId);
+    }
+    function moveDrag(e){
       if(!floatingDrag.active) return;
+      const point = pointFromEvent(e);
       floatingDrag.moved = true;
-      const x = Math.max(4, Math.min(window.innerWidth - btn.offsetWidth - 4, e.clientX - floatingDrag.dx));
-      const y2 = Math.max(54, Math.min(window.innerHeight - btn.offsetHeight - 8, e.clientY - floatingDrag.dy));
+      const x = Math.max(4, Math.min(window.innerWidth - btn.offsetWidth - 4, point.x - floatingDrag.dx));
+      const y2 = Math.max(54, Math.min(window.innerHeight - btn.offsetHeight - 8, point.y - floatingDrag.dy));
       btn.style.left = x + 'px'; btn.style.right = 'auto'; btn.style.top = y2 + 'px';
-    });
-    btn.addEventListener('pointerup', (e) => {
+      if(e.cancelable) e.preventDefault();
+    }
+    function endDrag(e){
       if(!floatingDrag.active) return;
-      btn.releasePointerCapture?.(e.pointerId);
+      if(btn.releasePointerCapture && e.pointerId != null) btn.releasePointerCapture(e.pointerId);
       floatingDrag.active = false;
       snapFloatingButton();
-      setTimeout(() => { floatingDrag.moved = false; }, 0);
-    });
+      setTimeout(function(){ floatingDrag.moved = false; }, 0);
+    }
+    btn.addEventListener('pointerdown', startDrag);
+    btn.addEventListener('pointermove', moveDrag);
+    btn.addEventListener('pointerup', endDrag);
+    btn.addEventListener('touchstart', startDrag, {passive:false});
+    btn.addEventListener('touchmove', moveDrag, {passive:false});
+    btn.addEventListener('touchend', endDrag);
+    btn.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('mouseup', endDrag);
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       if(floatingDrag.moved) return;
@@ -1112,8 +1128,8 @@
         return;
       }
       const zoneHead = e.target.closest('.zone-head');
-      if(zoneHead?.dataset.court){ await courtDown(zoneHead.dataset.court); e.stopPropagation(); return; }
-      if(zoneHead?.dataset.next){ await nextUp(zoneHead.dataset.next); e.stopPropagation(); return; }
+      if(zoneHead && zoneHead.dataset.court){ await courtDown(zoneHead.dataset.court); e.stopPropagation(); return; }
+      if(zoneHead && zoneHead.dataset.next){ await nextUp(zoneHead.dataset.next); e.stopPropagation(); return; }
     });
 
     $('cancelSelectBtn').onclick = () => clearSelected('已取消選取');
@@ -1159,7 +1175,7 @@
     $('exportBackupBtn').onclick = exportJson;
     $('exportLogBtn').onclick = exportLogCsv;
     $('importBackupBtn').onclick = () => $('importFileInput').click();
-    $('importFileInput').onchange = e => handleImportFile(e.target.files?.[0]);
+    $('importFileInput').onchange = function(e){ handleImportFile(e.target.files && e.target.files[0] ? e.target.files[0] : null); };
     $('newPlayerColorGrid').onclick = (e) => {
       const swatch = e.target.closest('.color-swatch');
       if(!swatch) return;

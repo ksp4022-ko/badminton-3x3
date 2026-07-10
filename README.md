@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.3.2｜2x2 / 3x3 iPad 單機 PWA 版
+# 羽球排場系統 v2.3.3｜2x2 / 3x3 iPad 單機 PWA 版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -94,3 +94,10 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 場次管理按鈕配色依操作風險統一。
 - 取消選取按鈕改為高反差，重複點同一球員可取消選取。
 - 新資料預設使用自動排場，舊資料保留既有設定。
+
+## v2.3.3 更新
+
+- 移除主版舊 Safari 不支援的 optional chaining 與 nullish coalescing 語法。
+- 補上 `vh` fallback，保留 `dvh` 給新裝置使用。
+- 浮動按鈕拖曳新增 touch / mouse fallback，支援沒有 PointerEvent 的舊 iPad。
+- 更新 Service Worker cache，協助舊裝置取得新版。
