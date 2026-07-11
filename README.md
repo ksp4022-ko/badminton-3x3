@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.4.0｜2x2 / 3x3 iPad 單機 PWA 版
+# 羽球排場系統 v2.4.1｜2x2 / 3x3 iPhone 17 Pro 主要版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -31,9 +31,9 @@ badminton-3x3
 
 https://你的GitHub帳號.github.io/badminton-3x3/
 
-## iPad 安裝方式
+## iPhone 安裝方式
 
-1. 用 iPad Safari 打開 GitHub Pages 網址
+1. 用 iPhone Safari 打開 GitHub Pages 網址
 2. 點分享按鈕
 3. 選「加入主畫面」
 4. 名稱可改為「羽球排場」
@@ -109,3 +109,9 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 若同群組成員已在某個 Next，新的同群組下場球員會優先補進該 Next。
 - 手動搬移優先，不會自動復原或重排既有 Next。
 - 球員名單備份新增群組資料，匯入後仍全部回休息區。
+
+## v2.4.1 更新
+
+- 浮動管理工具恢復 v2.3.2 的 pointer/click 穩定事件流程。
+- 移除 v2.3.3 為舊 iPad 加入的 touch / mouse fallback，避免 iPhone PWA 點擊被攔截。
+- 恢復現代 Safari 語法與 iPhone 17 Pro 主要版 CSS 寫法。
