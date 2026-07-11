@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.3.3｜2x2 / 3x3 iPad 單機 PWA 版
+# 羽球排場系統 v2.4.0｜2x2 / 3x3 iPad 單機 PWA 版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -54,7 +54,7 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 匯出球員名單 JSON
 - 匯入球員名單 JSON
 
-備份只保存球員姓名、已打場次、貼紙顏色與新增順序。匯入後所有球員會回到休息區，不保存 Court / Next 位置，也不切換目前 2x2 / 3x3 模式。
+備份保存球員姓名、已打場次、貼紙顏色、新增順序與群組資料。匯入後所有球員會回到休息區，不保存 Court / Next 位置，也不切換目前 2x2 / 3x3 模式。
 
 ## v2.2.0 更新
 
@@ -101,3 +101,11 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 補上 `vh` fallback，保留 `dvh` 給新裝置使用。
 - 浮動按鈕拖曳新增 touch / mouse fallback，支援沒有 PointerEvent 的舊 iPad。
 - 更新 Service Worker cache，協助舊裝置取得新版。
+
+## v2.4.0 更新
+
+- 新增 Admin 群組管理，可建立群組、加入選取球員、移除選取球員與刪除群組。
+- 自動排場時，同群組下場球員優先排入相同 Next；空格不足時仍允許拆開並排滿可用空格。
+- 若同群組成員已在某個 Next，新的同群組下場球員會優先補進該 Next。
+- 手動搬移優先，不會自動復原或重排既有 Next。
+- 球員名單備份新增群組資料，匯入後仍全部回休息區。

@@ -99,6 +99,10 @@
     .mode-row button.active{background:#0f766e;color:#fff}
     .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     .toggle-row button.active{background:#0f766e;color:#fff}
+    .group-list{display:grid;gap:8px;margin-top:10px;}
+    .group-card{border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc;padding:10px;}
+    .group-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:1000;color:#0f766e;margin-bottom:6px;}
+    .group-members{font-size:14px;font-weight:800;color:#475569;line-height:1.35;}
     .color-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:8px 0 10px;}
     .color-swatch{position:relative;min-height:42px;border-radius:12px;border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.2);padding:0;transition:transform .15s ease,box-shadow .15s ease;}
     .color-swatch.active{transform:scale(1.08);border-color:#fff;box-shadow:0 0 0 3px #111827,0 0 0 6px #fff,0 6px 14px rgba(15,23,42,.22);}
@@ -244,6 +248,23 @@
           </div>
 
           <div class="panel-section">
+            <button class="collapse-head" data-collapse-target="groupManageBody" type="button">群組管理</button>
+            <div class="collapsible-body" id="groupManageBody">
+              <label>建立群組</label>
+              <input id="newGroupInput" type="text" placeholder="輸入群組名稱" />
+              <button class="primary" id="createGroupBtn" style="width:100%;margin-top:8px">建立群組</button>
+              <label>選取球員加入群組</label>
+              <select id="groupSelect"></select>
+              <div class="button-grid" style="margin-top:8px">
+                <button id="assignGroupBtn">加入選取球員</button>
+                <button class="warn" id="clearGroupBtn">移除選取球員</button>
+              </div>
+              <div class="help" id="selectedGroupHelp">請先選取球員。</div>
+              <div class="group-list" id="groupList"></div>
+            </div>
+          </div>
+
+          <div class="panel-section">
             <button class="collapse-head" data-collapse-target="gamesManageBody" type="button">場次管理</button>
             <div class="collapsible-body" id="gamesManageBody">
               <div class="button-grid">
@@ -304,13 +325,13 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.3.3';
+  const APP_VERSION = '2.4.0';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
   const SLOTS = [1,2,3,4];
   const COLORS = ['#bfdbfe','#bbf7d0','#fde68a','#fecaca','#ddd6fe','#fed7aa','#bae6fd','#fbcfe8','#ccfbf1','#e9d5ff','#d9f99d','#fef3c7'];
-  const DEFAULT_COLLAPSED_SECTIONS = ['restSectionBody','adminSectionBody','autoCallBody','playerManageBody','gamesManageBody','systemOpsBody'];
+  const DEFAULT_COLLAPSED_SECTIONS = ['restSectionBody','adminSectionBody','autoCallBody','playerManageBody','groupManageBody','gamesManageBody','systemOpsBody'];
 
   let state = loadState();
   let selectedPlayer = null;
@@ -341,6 +362,7 @@
       createdAt:nowIso(),
       updatedAt:nowIso(),
       players:[],
+      groups:[],
       settings:{
         courtCount:3,
         nextCount:3,
@@ -382,6 +404,17 @@
     merged.settings.collapsedSections = Array.isArray(merged.settings.collapsedSections)
       ? merged.settings.collapsedSections.filter(id => DEFAULT_COLLAPSED_SECTIONS.includes(id))
       : DEFAULT_COLLAPSED_SECTIONS.slice();
+    merged.groups = Array.isArray(data && data.groups ? data.groups : null) ? data.groups : [];
+    merged.groups = merged.groups
+      .filter(g => g && String(g.name || '').trim())
+      .map((g, i) => ({
+        id:g.id || uid('G'),
+        name:String(g.name || '').trim(),
+        sortOrder:Number.isFinite(Number(g.sortOrder)) ? Number(g.sortOrder) : i + 1,
+        createdAt:g.createdAt || nowIso(),
+        updatedAt:g.updatedAt || nowIso()
+      }));
+    const groupIds = new Set(merged.groups.map(g => g.id));
     merged.players = Array.isArray(data && data.players ? data.players : null) ? data.players : [];
     merged.gameLog = Array.isArray(data && data.gameLog ? data.gameLog : null) ? data.gameLog : [];
     merged.players.forEach((p, i) => {
@@ -392,6 +425,7 @@
       p.zone = validZone(p.zone) ? p.zone : 'rest';
       p.slot = p.zone === 'rest' ? null : Number(p.slot) || null;
       p.sortOrder = Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : i + 1;
+      p.groupId = groupIds.has(p.groupId) ? p.groupId : null;
       p.isActive = p.isActive !== false;
       p.createdAt = p.createdAt || nowIso();
       p.updatedAt = p.updatedAt || nowIso();
@@ -414,6 +448,9 @@
   function isBoardEmpty(){ return boardPlayers().length === 0; }
   function getPlayer(id){ return state.players.find(p => p.id === id && p.isActive !== false) || null; }
   function activePlayers(){ return state.players.filter(p => p.isActive !== false); }
+  function activeGroups(){ return Array.isArray(state.groups) ? state.groups.slice().sort((a,b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name), 'zh-Hant')) : []; }
+  function getGroup(id){ return activeGroups().find(g => g.id === id) || null; }
+  function groupName(id){ const g = getGroup(id); return g ? g.name : '未分組'; }
   function zonePlayers(zone){ return activePlayers().filter(p => p.zone === zone).sort((a,b) => (a.slot || 99) - (b.slot || 99)); }
   function restPlayers(){ return activePlayers().filter(p => p.zone === 'rest').sort((a,b) => (a.games - b.games) || (a.sortOrder - b.sortOrder)); }
   function occupant(zone, slot){ return activePlayers().find(p => p.zone === zone && Number(p.slot) === Number(slot)) || null; }
@@ -543,6 +580,7 @@
     renderRestList();
     renderAdminUi();
     renderColorPicker();
+    renderGroupManagement();
     renderCollapsedSections();
   }
 
@@ -579,6 +617,32 @@
       const active = color === selectedNewPlayerColor ? ' active' : '';
       return `<button class="color-swatch${active}" type="button" data-color="${escapeHtml(color)}" style="background:${escapeHtml(color)}" aria-label="選擇顏色 ${escapeHtml(color)}"></button>`;
     }).join('');
+  }
+
+  function renderGroupManagement(){
+    const select = $('groupSelect');
+    const list = $('groupList');
+    const help = $('selectedGroupHelp');
+    if(!select || !list || !help) return;
+    const groups = activeGroups();
+    const selected = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    select.innerHTML = groups.length
+      ? groups.map(g => `<option value="${escapeHtml(g.id)}">${escapeHtml(g.name)}</option>`).join('')
+      : '<option value="">尚未建立群組</option>';
+    if(selected && selected.groupId && getGroup(selected.groupId)) select.value = selected.groupId;
+    help.textContent = selected
+      ? `已選取：${selected.name}｜目前群組：${groupName(selected.groupId)}`
+      : '請先選取球員。';
+    list.innerHTML = groups.length ? groups.map(g => {
+      const members = activePlayers()
+        .filter(p => p.groupId === g.id)
+        .sort((a,b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name), 'zh-Hant'))
+        .map(p => p.name);
+      return `<div class="group-card">
+        <div class="group-card-head"><span>${escapeHtml(g.name)}｜${members.length}人</span><button class="small danger" type="button" data-delete-group="${escapeHtml(g.id)}">刪除</button></div>
+        <div class="group-members">${members.length ? escapeHtml(members.join('、')) : '尚無球員'}</div>
+      </div>`;
+    }).join('') : '<div class="help">尚未建立群組</div>';
   }
 
   function renderCollapsedSections(){
@@ -670,27 +734,76 @@
   async function autoArrangeCourtDown(courtZone, players){
     players.forEach(p => { p.zone='rest'; p.slot=null; p.updatedAt=nowIso(); });
     await autoNextUpToCourt('next1', courtZone, true);
-    const sorted = shuffleTiesByGames(players);
-    const nextSlots = emptySlots(activeNexts());
+    const arranged = arrangeDownPlayersIntoNext(players);
+    logAction('autoCourtDown',courtZone,players.map(p=>p.name),`下場 +1，排入 Next：${arranged.placed.join('、') || '無'}${arranged.overflow.length ? '；回休息區：' + arranged.overflow.join('、') : ''}`);
+    if(arranged.overflow.length){
+      await alertDialog('Next 空位不足', 'Next 空位不足，已依規則能放幾個放幾個，剩下回休息區。', `<div class="backup-summary">回休息區：${arranged.overflow.map(escapeHtml).join('、')}</div>`);
+    }
+  }
+
+  function arrangeDownPlayersIntoNext(players){
+    const unplaced = new Set(players);
     const placed = [];
     const overflow = [];
-    sorted.forEach((p, i) => {
-      const target = nextSlots[i];
+    const groupMap = new Map();
+    players.forEach(p => {
+      if(p.groupId && getGroup(p.groupId)){
+        if(!groupMap.has(p.groupId)) groupMap.set(p.groupId, []);
+        groupMap.get(p.groupId).push(p);
+      }
+    });
+    const groupEntries = Array.from(groupMap.entries()).map(([groupId, members]) => ({
+      groupId,
+      members:shuffleTiesByGames(members),
+      size:members.length,
+      avg:members.reduce((sum,p)=>sum + (Number(p.games)||0),0) / members.length,
+      tie:Math.random()
+    })).sort((a,b) => (b.size - a.size) || (a.avg - b.avg) || (a.tie - b.tie));
+
+    function placePlayerInZone(p, zone){
+      const slot = SLOTS.find(s => !occupant(zone, s));
+      if(!slot) return false;
+      p.zone = zone;
+      p.slot = slot;
+      p.updatedAt = nowIso();
+      unplaced.delete(p);
+      placed.push(p.name);
+      return true;
+    }
+
+    function emptyCount(zone){
+      return SLOTS.filter(slot => !occupant(zone, slot)).length;
+    }
+
+    groupEntries.forEach(entry => {
+      let remaining = entry.members.filter(p => unplaced.has(p));
+      const existingZone = activeNexts().find(zone => zonePlayers(zone).some(p => p.groupId === entry.groupId) && emptyCount(zone) > 0);
+      if(existingZone){
+        remaining = remaining.filter(p => !placePlayerInZone(p, existingZone));
+      }
+      if(!remaining.length) return;
+      const fitZone = activeNexts().find(zone => emptyCount(zone) >= remaining.length);
+      const targetZone = fitZone || activeNexts().slice().sort((a,b) => emptyCount(b) - emptyCount(a) || activeNexts().indexOf(a) - activeNexts().indexOf(b))[0];
+      if(targetZone && emptyCount(targetZone) > 0){
+        remaining = remaining.filter(p => !placePlayerInZone(p, targetZone));
+      }
+    });
+
+    shuffleTiesByGames(Array.from(unplaced)).forEach(p => {
+      const target = emptySlots(activeNexts())[0];
       if(target){
         p.zone = target.zone;
         p.slot = target.slot;
+        p.updatedAt = nowIso();
         placed.push(p.name);
       }else{
         p.zone = 'rest';
         p.slot = null;
+        p.updatedAt = nowIso();
         overflow.push(p.name);
       }
-      p.updatedAt = nowIso();
     });
-    logAction('autoCourtDown',courtZone,sorted.map(p=>p.name),`下場 +1，排入 Next：${placed.join('、') || '無'}${overflow.length ? '；回休息區：' + overflow.join('、') : ''}`);
-    if(overflow.length){
-      await alertDialog('Next 空位不足', 'Next 空位不足，已依規則能放幾個放幾個，剩下回休息區。', `<div class="backup-summary">回休息區：${overflow.map(escapeHtml).join('、')}</div>`);
-    }
+    return {placed, overflow};
   }
 
   function emptySlots(zones){
@@ -772,13 +885,69 @@
   function addPlayer(name){
     name = String(name||'').trim();
     if(!name){ showToast('請輸入姓名'); return; }
-    const p = { id:uid('P'), name, games:0, color:selectedNewPlayerColor, zone:'rest', slot:null, isActive:true, sortOrder:Date.now(), createdAt:nowIso(), updatedAt:nowIso() };
+    const p = { id:uid('P'), name, games:0, color:selectedNewPlayerColor, zone:'rest', slot:null, groupId:null, isActive:true, sortOrder:Date.now(), createdAt:nowIso(), updatedAt:nowIso() };
     state.players.push(p);
     logAction('addPlayer','rest',[name],'新增球員');
     saveState();
     $('newPlayerInput').value = '';
     showToast(`已新增：${name}`);
     render();
+  }
+
+  function createGroup(){
+    const input = $('newGroupInput');
+    const name = String(input.value || '').trim();
+    if(!name){ showToast('請輸入群組名稱'); return; }
+    if(activeGroups().some(g => g.name === name)){ showToast('群組名稱已存在'); return; }
+    const group = {id:uid('G'), name, sortOrder:Date.now(), createdAt:nowIso(), updatedAt:nowIso()};
+    state.groups.push(group);
+    logAction('createGroup','group',[name],'建立群組');
+    input.value = '';
+    saveState();
+    showToast(`已建立群組：${name}`);
+    renderPanel();
+  }
+
+  function assignSelectedGroup(){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(!p){ showToast('請先選取球員'); return; }
+    const groupId = $('groupSelect').value;
+    const group = getGroup(groupId);
+    if(!group){ showToast('請先建立群組'); return; }
+    p.groupId = group.id;
+    p.updatedAt = nowIso();
+    logAction('assignGroup','group',[p.name],`加入群組：${group.name}`);
+    saveState();
+    showToast(`${p.name} 已加入 ${group.name}`);
+    renderPanel();
+  }
+
+  function clearSelectedGroup(){
+    const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(!p){ showToast('請先選取球員'); return; }
+    if(!p.groupId){ showToast('此球員未分組'); return; }
+    const old = groupName(p.groupId);
+    p.groupId = null;
+    p.updatedAt = nowIso();
+    logAction('clearGroup','group',[p.name],`移除群組：${old}`);
+    saveState();
+    showToast(`${p.name} 已移除群組`);
+    renderPanel();
+  }
+
+  async function deleteGroup(groupId){
+    const group = getGroup(groupId);
+    if(!group){ showToast('找不到群組'); return; }
+    const members = activePlayers().filter(p => p.groupId === group.id);
+    const extra = `<div class="backup-summary">${members.length ? '成員：' + members.map(p => escapeHtml(p.name)).join('、') : '此群組目前沒有成員'}</div>`;
+    const ok = await confirmDialog('刪除群組', `確定刪除「${group.name}」？球員不會被刪除，只會變成未分組。`, extra);
+    if(!ok) return;
+    members.forEach(p => { p.groupId = null; p.updatedAt = nowIso(); });
+    state.groups = activeGroups().filter(g => g.id !== group.id);
+    logAction('deleteGroup','group',[group.name],'刪除群組');
+    saveState();
+    showToast('已刪除群組');
+    renderPanel();
   }
 
   function renameSelected(){
@@ -957,6 +1126,11 @@
       backupType:'player-list',
       version:APP_VERSION,
       exportedAt:nowIso(),
+      groups:activeGroups().map(g => ({
+        id:g.id,
+        name:g.name,
+        sortOrder:Number.isFinite(Number(g.sortOrder)) ? Number(g.sortOrder) : 0
+      })),
       players:activePlayers()
         .slice()
         .sort((a,b) => (a.sortOrder - b.sortOrder) || String(a.name).localeCompare(String(b.name), 'zh-Hant'))
@@ -964,7 +1138,9 @@
           name:p.name,
           games:Number(p.games) || 0,
           color:p.color || COLORS[index % COLORS.length],
-          sortOrder:Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : index + 1
+          sortOrder:Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : index + 1,
+          groupId:p.groupId || null,
+          groupName:p.groupId ? groupName(p.groupId) : null
         }))
     };
     downloadText(`badminton-player-list-${localStamp()}.json`, JSON.stringify(payload, null, 2), 'application/json');
@@ -1002,9 +1178,11 @@
         : '匯入球員名單會覆蓋現有球員名單，所有球員會放回休息區。是否繼續？';
       const ok = await confirmDialog('匯入球員名單 JSON', message, extra);
       if(!ok) return;
-      const importedPlayers = normalizeImportedPlayers(data.players);
+      const importedGroups = normalizeImportedGroups(data.groups, data.players);
+      const importedPlayers = normalizeImportedPlayers(data.players, importedGroups);
       if(!importedPlayers.length && playerCount > 0) throw new Error('格式錯誤');
       const keepSettings = clone(state.settings);
+      state.groups = importedGroups;
       state.players = importedPlayers;
       state.settings = keepSettings;
       state.settings.lastCallPlayers = [];
@@ -1022,8 +1200,31 @@
     }
   }
 
-  function normalizeImportedPlayers(players){
+  function normalizeImportedGroups(groups, players){
+    const byName = new Map();
+    const result = [];
+    function addGroup(name, id, sortOrder){
+      name = String(name || '').trim();
+      if(!name || byName.has(name)) return;
+      const group = {id:id || uid('G'), name, sortOrder:Number.isFinite(Number(sortOrder)) ? Number(sortOrder) : result.length + 1, createdAt:nowIso(), updatedAt:nowIso()};
+      result.push(group);
+      byName.set(name, group);
+    }
+    if(Array.isArray(groups)){
+      groups.forEach(g => addGroup(g && g.name, g && g.id, g && g.sortOrder));
+    }
+    if(Array.isArray(players)){
+      players.forEach(p => {
+        if(p && p.groupName) addGroup(p.groupName, null, null);
+      });
+    }
+    return result;
+  }
+
+  function normalizeImportedPlayers(players, importedGroups=[]){
     if(!Array.isArray(players)) return [];
+    const groupsById = new Map(importedGroups.map(g => [g.id, g]));
+    const groupsByName = new Map(importedGroups.map(g => [g.name, g]));
     return players
       .filter(p => p && p.isActive !== false && String(p.name || '').trim())
       .map((p, index) => ({
@@ -1033,6 +1234,7 @@
         color:p.color || COLORS[index % COLORS.length],
         zone:'rest',
         slot:null,
+        groupId:groupsById.has(p.groupId) ? p.groupId : (groupsByName.get(p.groupName) ? groupsByName.get(p.groupName).id : null),
         sortOrder:Number.isFinite(Number(p.sortOrder)) ? Number(p.sortOrder) : index + 1,
         isActive:true,
         createdAt:nowIso(),
@@ -1162,6 +1364,14 @@
     $('saveVoiceBtn').onclick = saveVoiceSettings;
     $('addPlayerBtn').onclick = () => addPlayer($('newPlayerInput').value);
     $('newPlayerInput').addEventListener('keydown', e => { if(e.key==='Enter') addPlayer($('newPlayerInput').value); });
+    $('createGroupBtn').onclick = createGroup;
+    $('newGroupInput').addEventListener('keydown', e => { if(e.key==='Enter') createGroup(); });
+    $('assignGroupBtn').onclick = assignSelectedGroup;
+    $('clearGroupBtn').onclick = clearSelectedGroup;
+    $('groupList').onclick = (e) => {
+      const btn = e.target.closest('[data-delete-group]');
+      if(btn) deleteGroup(btn.dataset.deleteGroup);
+    };
     $('renamePlayerBtn').onclick = renameSelected;
     $('deletePlayerBtn').onclick = deleteSelected;
     $('plusGameBtn').onclick = () => adjustSelectedGames(1);
