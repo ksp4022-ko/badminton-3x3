@@ -325,7 +325,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.4.2';
+  const APP_VERSION = '2.4.3';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -936,8 +936,9 @@
     p.updatedAt = nowIso();
     logAction('assignGroup','group',[p.name],`加入群組：${group.name}`);
     saveState();
+    selectedPlayer = null;
     showToast(`${p.name} 已加入 ${group.name}`);
-    renderPanel();
+    render();
   }
 
   function clearSelectedGroup(){
@@ -949,8 +950,9 @@
     p.updatedAt = nowIso();
     logAction('clearGroup','group',[p.name],`移除群組：${old}`);
     saveState();
+    selectedPlayer = null;
     showToast(`${p.name} 已移除群組`);
-    renderPanel();
+    render();
   }
 
   async function deleteGroup(groupId){
