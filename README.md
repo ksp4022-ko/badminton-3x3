@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.4.1｜2x2 / 3x3 iPhone 17 Pro 主要版
+# 羽球排場系統 v2.4.2｜2x2 / 3x3 iPhone 17 Pro 主要版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -115,3 +115,10 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 浮動管理工具恢復 v2.3.2 的 pointer/click 穩定事件流程。
 - 移除 v2.3.3 為舊 iPad 加入的 touch / mouse fallback，避免 iPhone PWA 點擊被攔截。
 - 恢復現代 Safari 語法與 iPhone 17 Pro 主要版 CSS 寫法。
+
+## v2.4.2 更新
+
+- 修正群組管理「加入選取球員」為選取操作警示配色。
+- 修正「今日重新開始」為全域重置危險配色。
+- 已選取 Court / Next 球員後，再點另一位 Court / Next 球員可直接交換位置。
+- 涉及休息區球員時不交換，改為選取新點擊球員，避免誤觸上場。

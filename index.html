@@ -256,7 +256,7 @@
               <label>選取球員加入群組</label>
               <select id="groupSelect"></select>
               <div class="button-grid" style="margin-top:8px">
-                <button id="assignGroupBtn">加入選取球員</button>
+                <button class="warn" id="assignGroupBtn">加入選取球員</button>
                 <button class="warn" id="clearGroupBtn">移除選取球員</button>
               </div>
               <div class="help" id="selectedGroupHelp">請先選取球員。</div>
@@ -285,7 +285,7 @@
                   <button id="autoModeBtn">自動排場</button>
                 </div>
                 <button class="primary" id="randomFillBtn">隨機填滿場地</button>
-                <button class="warn" id="resetTodayBtn">今日重新開始</button>
+                <button class="danger" id="resetTodayBtn">今日重新開始</button>
                 <button id="exportBackupBtn">匯出球員名單 JSON</button>
                 <button id="importBackupBtn">匯入球員名單 JSON</button>
                 <button id="exportLogBtn">匯出今日紀錄 CSV</button>
@@ -325,7 +325,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.4.1';
+  const APP_VERSION = '2.4.2';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -670,6 +670,24 @@
     showToast(`已選取：${p.name}`);
     if(options.closePanelAfterSelect){ closePanel(); }
     render();
+  }
+
+  function handlePlayerTap(playerId, options={}){
+    const tapped = getPlayer(playerId);
+    if(!tapped) return;
+    const selected = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
+    if(selected && selected.id !== tapped.id){
+      const selectedOnBoard = selected.zone !== 'rest';
+      const tappedOnBoard = tapped.zone !== 'rest';
+      if(selectedOnBoard && tappedOnBoard){
+        const ok = movePlayer(selected.id, tapped.zone, tapped.slot);
+        selectedPlayer = null;
+        showToast(ok ? '已交換位置' : '交換失敗');
+        render();
+        return;
+      }
+    }
+    selectPlayer(playerId, options);
   }
 
   function clearSelected(reason){
@@ -1300,7 +1318,7 @@
       const chip = e.target.closest('.player-chip');
       if(chip){
         const inRest = !!chip.closest('#restList');
-        selectPlayer(chip.dataset.playerId, {closePanelAfterSelect:inRest});
+        handlePlayerTap(chip.dataset.playerId, {closePanelAfterSelect:inRest});
         e.stopPropagation();
         return;
       }
