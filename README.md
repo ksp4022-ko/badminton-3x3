@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.4.3｜2x2 / 3x3 iPhone 17 Pro 主要版
+# 羽球排場系統 v2.4.4｜2x2 / 3x3 iPhone 17 Pro 主要版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -128,3 +128,8 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 加入選取球員成功後會釋放選取狀態。
 - 移除選取球員群組成功後會釋放選取狀態。
 - 無效操作仍保留選取狀態，方便繼續建立群組或修正操作。
+## v2.4.4 更新
+
+- Court 表頭改為顯示「⬇ 下場」，讓下場操作更明確。
+- Next 表頭保留人數顯示。
+- Next 上場到 Court 後，目標 Court 會顯示 4 秒「上場」高亮特效。
