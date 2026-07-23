@@ -1,4 +1,4 @@
-# 羽球排場系統 v2.4.5｜2x2 / 3x3 iPhone 17 Pro 主要版
+# 羽球排場系統 v2.4.6｜2x2 / 3x3 iPhone 17 Pro 主要版
 
 這是純前端版本，不使用 Google Sheet，也不使用 Apps Script。
 資料會存在使用者目前裝置與瀏覽器的 localStorage。
@@ -138,3 +138,9 @@ https://ksp4022-ko.github.io/badminton-3x3/ipad-test.html?v=1
 - 自動呼叫新增自訂播報模板，支援 `{players}`、`{court}`。
 - 播報模板空白時維持原本預設格式。
 - 整體網頁背景改為深綠灰，讓上場 Court 高亮更明顯。
+## v2.4.6 更新
+
+- 整體配色改為深碳黑背景、亮藍 Court、中灰 Next、綠色上場特效。
+- 上場中的 Court 卡片加入淡綠底色，提升層次與辨識度。
+- Court / Next 表頭加入立體按鈕效果。
+- 上場提示改為 `請上場` 半形點點動畫。

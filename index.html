@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png" />
   <style>
     :root{
-      --bg:#0b3b35;
+      --bg:#18181b;
       --panel:#ffffff;
       --ink:#0f172a;
       --muted:#475569;
@@ -56,19 +56,27 @@
     .section-title{display:none;}
     .zone-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
     .zone-row.mode-2{grid-template-columns:repeat(2,minmax(0,1fr));}
-    .zone-card{position:relative;background:rgba(255,255,255,.96);border:1px solid #bae6fd;border-radius:var(--radius);box-shadow:0 10px 22px rgba(15,23,42,.1);padding:8px;min-width:0;}
-    .zone-card.court-up-highlight{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.38),0 12px 28px rgba(15,23,42,.18);animation:courtUpPulse .9s ease-in-out infinite alternate;}
+    .zone-card{position:relative;background:rgba(255,255,255,.96);border:1px solid #bae6fd;border-radius:var(--radius);box-shadow:0 10px 22px rgba(15,23,42,.22);padding:8px;min-width:0;}
+    .zone-card.court-up-highlight{background:#dcfce7;border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.45),0 12px 28px rgba(15,23,42,.28);animation:courtUpPulse .9s ease-in-out infinite alternate;}
     @keyframes courtUpPulse{
-      from{box-shadow:0 0 0 3px rgba(34,197,94,.28),0 12px 28px rgba(15,23,42,.16);}
-      to{box-shadow:0 0 0 5px rgba(34,197,94,.46),0 16px 34px rgba(15,23,42,.22);}
+      from{box-shadow:0 0 0 3px rgba(34,197,94,.32),0 12px 28px rgba(15,23,42,.24);}
+      to{box-shadow:0 0 0 5px rgba(34,197,94,.58),0 16px 34px rgba(15,23,42,.32);}
     }
-    .zone-head{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;border:1px solid #99f6e4;background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;border-radius:14px;min-height:44px;padding:8px 10px;text-align:left;}
-    .zone-head.warn{background:linear-gradient(135deg,#92400e,#f59e0b);border-color:#facc15;}
-    .zone-head:active{transform:translateY(1px)}
+    .zone-head{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;border:1px solid #cbd5e1;background:linear-gradient(135deg,#475569,#94a3b8);color:#fff;border-radius:14px;min-height:44px;padding:8px 10px;text-align:left;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 4px 0 rgba(15,23,42,.22),0 7px 12px rgba(15,23,42,.18);}
+    .zone-head.warn{background:linear-gradient(135deg,#1d4ed8,#38bdf8);border-color:#bfdbfe;}
+    .zone-head:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 0 rgba(15,23,42,.24),0 4px 8px rgba(15,23,42,.16);}
     .zone-title{font-size:clamp(18px,2vw,25px);font-weight:950;color:#0f172a;white-space:nowrap;}
     .zone-head .zone-title,.zone-head .zone-count{color:#fff;}
     .zone-count{font-size:15px;color:#64748b;font-weight:800;white-space:nowrap;}
-    .zone-action-label{font-size:16px;font-weight:1000;letter-spacing:0;}
+    .zone-action-label{min-width:58px;text-align:right;font-size:16px;font-weight:1000;letter-spacing:0;}
+    .court-up-label{min-width:86px;}
+    .court-up-label::after{content:"";animation:callDots 1s steps(1,end) infinite;}
+    @keyframes callDots{
+      0%,24%{content:"";}
+      25%,49%{content:".";}
+      50%,74%{content:"..";}
+      75%,100%{content:"...";}
+    }
     .zone-card.court-up-highlight .zone-head.warn{background:linear-gradient(135deg,#15803d,#22c55e);border-color:#bbf7d0;}
     .slot-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,1fr);gap:8px;min-height:clamp(132px,21dvh,214px);}
     .slot{border:2px dashed #94a3b8;border-radius:16px;background:#f8fafc;min-height:54px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
@@ -335,7 +343,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.4.5';
+  const APP_VERSION = '2.4.6';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -554,7 +562,8 @@
     const title = zoneLabel(zone);
     const isHighlighted = highlightedCourt === zone;
     const cardClass = isHighlighted ? ' court-up-highlight' : '';
-    const headLabel = isCourt ? (isHighlighted ? '上場' : '⬇ 下場') : `${players.length}/4`;
+    const headLabel = isCourt ? (isHighlighted ? '請上場' : '⬇ 下場') : `${players.length}/4`;
+    const labelClass = isHighlighted ? ' court-up-label' : '';
     const slots = SLOTS.map(slot => {
       const p = occupant(zone, slot);
       const content = p ? playerChipHtml(p) : '';
@@ -562,7 +571,7 @@
     }).join('');
     const actionClass = isCourt ? 'warn' : '';
     const actionData = isCourt ? `data-court="${zone}"` : `data-next="${zone}"`;
-    return `<div class="zone-card${cardClass}"><button class="zone-head ${actionClass}" ${actionData} type="button"><div class="zone-title">${title}</div><div class="zone-count zone-action-label">${headLabel}</div></button><div class="slot-grid">${slots}</div></div>`;
+    return `<div class="zone-card${cardClass}"><button class="zone-head ${actionClass}" ${actionData} type="button"><div class="zone-title">${title}</div><div class="zone-count zone-action-label${labelClass}">${headLabel}</div></button><div class="slot-grid">${slots}</div></div>`;
   }
 
   function highlightCourtUp(court){
