@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png" />
   <style>
     :root{
-      --bg:#ecfeff;
+      --bg:#0b3b35;
       --panel:#ffffff;
       --ink:#0f172a;
       --muted:#475569;
@@ -230,6 +230,9 @@
               <select id="voicePitchSelect"><option value="low">低</option><option value="normal">正常</option><option value="high">高</option></select>
               <label>語音</label>
               <select id="voiceLangSelect"><option value="auto">自動</option><option value="zh-TW-first">中文優先</option></select>
+              <label>播報模板</label>
+              <input id="voiceTemplateInput" type="text" placeholder="{players} 請上 {court}" />
+              <div class="help">可使用 {players}、{court}，空白則使用預設格式。</div>
               <div class="button-grid" style="margin-top:8px">
                 <button id="voiceTestBtn">語音設定 / 試播</button>
                 <button id="saveVoiceBtn">儲存設定</button>
@@ -332,7 +335,7 @@
 (() => {
   'use strict';
 
-  const APP_VERSION = '2.4.4';
+  const APP_VERSION = '2.4.5';
   const STORAGE_KEY = 'badminton3x3.pwa.v210.state';
   const COURTS = ['court1','court2','court3'];
   const NEXTS = ['next1','next2','next3'];
@@ -383,6 +386,7 @@
         voiceRate:'normal',
         voicePitch:'normal',
         voiceLang:'zh-TW-first',
+        voiceTemplate:'',
         lastCallPlayers:[],
         lastCallCourt:null,
         floating:{ side:'left', y:0.45 },
@@ -629,6 +633,7 @@
     $('voiceRateSelect').value = state.settings.voiceRate || 'normal';
     $('voicePitchSelect').value = state.settings.voicePitch || 'normal';
     $('voiceLangSelect').value = state.settings.voiceLang || 'zh-TW-first';
+    $('voiceTemplateInput').value = state.settings.voiceTemplate || '';
     const p = selectedPlayer ? getPlayer(selectedPlayer.playerId) : null;
     $('renamePlayerInput').value = p ? p.name : '';
   }
@@ -1126,13 +1131,20 @@
     return map[courtZone] || '';
   }
 
+  function buildCallText(names, courtName){
+    const playersText = names.join('、');
+    const template = String(state.settings.voiceTemplate || '').trim();
+    if(!template) return courtName ? `${playersText} 請上${courtName}` : '請上場：' + playersText;
+    return template.replaceAll('{players}', playersText).replaceAll('{court}', courtName || '');
+  }
+
   function callPlayers(names, courtZone=null){
     if(!Array.isArray(names) || !names.length){ showToast('目前沒有可呼叫的人員'); return; }
     state.settings.lastCallPlayers = names.slice();
     state.settings.lastCallCourt = courtZone || null;
     saveState();
     const courtName = courtVoiceName(courtZone);
-    const text = courtName ? `${names.join('、')} 請上${courtName}` : '請上場：' + names.join('、');
+    const text = buildCallText(names, courtName);
     try{
       if(window.speechSynthesis && window.speechSynthesis.cancel) window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
@@ -1156,10 +1168,15 @@
     callPlayers(names, state.settings.lastCallCourt || null);
   }
 
-  function saveVoiceSettings(){
+  function syncVoiceSettingsFromForm(){
     state.settings.voiceRate = $('voiceRateSelect').value;
     state.settings.voicePitch = $('voicePitchSelect').value;
     state.settings.voiceLang = $('voiceLangSelect').value;
+    state.settings.voiceTemplate = $('voiceTemplateInput').value.trim();
+  }
+
+  function saveVoiceSettings(){
+    syncVoiceSettingsFromForm();
     saveState();
     showToast('語音設定已儲存');
     render();
@@ -1389,7 +1406,7 @@
     $('randomFillBtn').onclick = randomFillCourts;
     $('autoCallOffBtn').onclick = () => { state.settings.autoCallEnabled=false; saveState(); renderPanel(); };
     $('autoCallOnBtn').onclick = () => { state.settings.autoCallEnabled=true; saveState(); renderPanel(); };
-    $('voiceTestBtn').onclick = () => callPlayers(['測試','請上場']);
+    $('voiceTestBtn').onclick = () => { syncVoiceSettingsFromForm(); saveState(); callPlayers(['測試','請上場'], 'court1'); };
     $('saveVoiceBtn').onclick = saveVoiceSettings;
     $('addPlayerBtn').onclick = () => addPlayer($('newPlayerInput').value);
     $('newPlayerInput').addEventListener('keydown', e => { if(e.key==='Enter') addPlayer($('newPlayerInput').value); });
