@@ -1,0 +1,25 @@
+{
+  "name": "羽球報名系統",
+  "short_name": "羽球報名",
+  "description": "康軒羽球聚會報名系統入口",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#edf5fb",
+  "theme_color": "#4f9bff",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
